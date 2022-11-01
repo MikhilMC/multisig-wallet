@@ -109,6 +109,58 @@ describe("MultiSigWallet.sol", () => {
     });
   });
 
+  describe("Setup errors", () => {
+    it("Should revert if the array of owners is empty", async () => {
+      const MultiSigWalletError = await ethers.getContractFactory(
+        "MultiSigWallet"
+      );
+      await expect(MultiSigWalletError.deploy([], 4)).to.be.revertedWith(
+        "Owners required"
+      );
+    });
+
+    it("Should revert if the invalid number of votes is invalid", async () => {
+      const MultiSigWalletError = await ethers.getContractFactory(
+        "MultiSigWallet"
+      );
+      await expect(
+        MultiSigWalletError.deploy(
+          [owner1Address, owner2Address, owner3Address, owner4Address],
+          1
+        )
+      ).to.be.revertedWith("Invalid number of required votes");
+    });
+
+    it("Should revert if any of the owners is a zero address", async () => {
+      const MultiSigWalletError = await ethers.getContractFactory(
+        "MultiSigWallet"
+      );
+      await expect(
+        MultiSigWalletError.deploy(
+          [
+            ethers.constants.AddressZero,
+            owner2Address,
+            owner3Address,
+            owner4Address,
+          ],
+          3
+        )
+      ).to.be.revertedWith("Invalid address");
+    });
+
+    it("Should revert if any of the addresses in owners list is got repeated", async () => {
+      const MultiSigWalletError = await ethers.getContractFactory(
+        "MultiSigWallet"
+      );
+      await expect(
+        MultiSigWalletError.deploy(
+          [owner1Address, owner2Address, owner1Address, owner4Address],
+          3
+        )
+      ).to.be.revertedWith("Owner is not unique");
+    });
+  });
+
   describe("Signing the transaction of ether transfer from one account to another", () => {
     beforeEach(async () => {
       const tx = await owner1.sendTransaction({
@@ -831,17 +883,11 @@ describe("MultiSigWallet.sol", () => {
     });
 
     it("Should fail voting for the removal of a current owner due to time up", async () => {
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner2).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner3).voteRemovalProposal(0);
-
       await network.provider.send("evm_increaseTime", [300]);
       await network.provider.send("evm_mine");
 
       await expect(
-        multiSigWallet.connect(owner4).revokeRemovalSupport(0)
+        multiSigWallet.connect(owner4).voteRemovalProposal(0)
       ).to.be.revertedWith("Time up!");
     });
 

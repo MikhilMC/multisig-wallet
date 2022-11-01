@@ -10,476 +10,476 @@
   {
    "title": "Should have all the owner addresses correctly",
    "fullTitle": "MultiSigWallet.sol Correct setup Should have all the owner addresses correctly",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should have correct number of required votes",
    "fullTitle": "MultiSigWallet.sol Correct setup Should have correct number of required votes",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if submitting a transaction is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if submitting a transaction is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if submitting a transaction zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if submitting a transaction zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should successfully send ether",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should successfully send ether",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction which that account already supported previously",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction which that account already supported previously",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction which is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction which is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail the ether transfer due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail the ether transfer due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for a transaction",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should revoke support for a transaction",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if revoking support for a transaction is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if revoking support for a transaction is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if revoking support for a transaction which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if revoking support for a transaction which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if revoking support for a transaction which is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if revoking support for a transaction which is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail to revoke support method due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail to revoke support method due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail the ether transfer due to less balance",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail the ether transfer due to less balance",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should successfully change the value of the state variable i",
    "fullTitle": "MultiSigWallet.sol Signing the execution of a function from another contract Should successfully change the value of the state variable i",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should transfer token to the receiver",
    "fullTitle": "MultiSigWallet.sol Signing of token transfer to one account Should transfer token to the receiver",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the inclusion request is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail, if the inclusion request is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if request is for including an account which is already an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail, if request is for including an account which is already an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if request is having zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail, if request is having zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should include the new account into the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should include the new account into the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should increase required votes while including the new account into the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should increase required votes while including the new account into the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, if it is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, if it is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, which that account already supported",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, which that account already supported",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, which is already made as an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, which is already made as an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail voting for a new owner candidate due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail voting for a new owner candidate due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for a new owner candidate",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should revoke support for a new owner candidate",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a candidate, if it is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revoke support for a candidate, if it is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revert support for a candidate, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revert support for a candidate, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revert support for a candidate, which is already made as an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revert support for a candidate, which is already made as an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revoke support method due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revoke support method due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to propse the removal of an owner, if the request is made by an account which is not the user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to propse the removal of an owner, if the request is made by an account which is not the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to propse the removal of an owner, if the given address is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to propse the removal of an owner, if the given address is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to propse the removal of an owner, due to zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to propse the removal of an owner, due to zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should remove a current account from the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should remove a current account from the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should decrease required votes while accounts is removed from the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should decrease required votes while accounts is removed from the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, if the request is made by an account which is not the user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, if the request is made by an account which is not the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, which is already supported by that user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, which is already supported by that user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, for an owner whom was already removed",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, for an owner whom was already removed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail voting for the removal of a current owner due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail voting for the removal of a current owner due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for the removal of an owner",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should revoke support for the removal of an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a removal proposal, if the request is made by an account which is not the user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for a removal proposal, if the request is made by an account which is not the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a removal proposal, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for a removal proposal, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a removal proposal, for an owner whom was already removed",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for a removal proposal, for an owner whom was already removed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for removal due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for removal due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for removal due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for removal due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new amount of required votes is made by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new amount of required votes is made by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposed new amount of required votes is same as the current one",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposed new amount of required votes is same as the current one",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposed new amount of required votes is invalid amount",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposed new amount of required votes is invalid amount",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, due to zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, due to zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should change the required number of votes",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should change the required number of votes",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the supporting account for a new required number of votes is not by an owner",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the supporting account for a new required number of votes is not by an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes is already accepted by the user",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes is already accepted by the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail voting change the required number of votes due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail voting change the required number of votes due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for changing the required number of votes",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should revoke support for changing the required number of votes",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if revoking support for a new required number of votes made by an account is not by an owner",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if revoking support for a new required number of votes made by an account is not by an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for changing the required number of votes due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail to revoke support for changing the required number of votes due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for changing the required number of votes due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail to revoke support for changing the required number of votes due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should give proper timestamp",
    "fullTitle": "MultiSigWallet.sol Testing of getCurrentTime function Should give proper timestamp",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   }
@@ -489,476 +489,476 @@
   {
    "title": "Should have all the owner addresses correctly",
    "fullTitle": "MultiSigWallet.sol Correct setup Should have all the owner addresses correctly",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should have correct number of required votes",
    "fullTitle": "MultiSigWallet.sol Correct setup Should have correct number of required votes",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if submitting a transaction is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if submitting a transaction is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if submitting a transaction zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if submitting a transaction zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should successfully send ether",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should successfully send ether",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction which that account already supported previously",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction which that account already supported previously",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if supporting a transaction which is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if supporting a transaction which is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail the ether transfer due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail the ether transfer due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for a transaction",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should revoke support for a transaction",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if revoking support for a transaction is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if revoking support for a transaction is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if revoking support for a transaction which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if revoking support for a transaction which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail if revoking support for a transaction which is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail if revoking support for a transaction which is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail to revoke support method due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail to revoke support method due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail the ether transfer due to less balance",
    "fullTitle": "MultiSigWallet.sol Signing the transaction of ether transfer from one account to another Should fail the ether transfer due to less balance",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should successfully change the value of the state variable i",
    "fullTitle": "MultiSigWallet.sol Signing the execution of a function from another contract Should successfully change the value of the state variable i",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should transfer token to the receiver",
    "fullTitle": "MultiSigWallet.sol Signing of token transfer to one account Should transfer token to the receiver",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the inclusion request is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail, if the inclusion request is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if request is for including an account which is already an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail, if request is for including an account which is already an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if request is having zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail, if request is having zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should include the new account into the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should include the new account into the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should increase required votes while including the new account into the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should increase required votes while including the new account into the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, if it is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, if it is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, which that account already supported",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, which that account already supported",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to supporting a candidate, which is already made as an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to supporting a candidate, which is already made as an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail voting for a new owner candidate due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail voting for a new owner candidate due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for a new owner candidate",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should revoke support for a new owner candidate",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a candidate, if it is done by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revoke support for a candidate, if it is done by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revert support for a candidate, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revert support for a candidate, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revert support for a candidate, which is already made as an owner",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revert support for a candidate, which is already made as an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revoke support method due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support method due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the inclusion of a new owner Should fail to revoke support method due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to propse the removal of an owner, if the request is made by an account which is not the user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to propse the removal of an owner, if the request is made by an account which is not the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to propse the removal of an owner, if the given address is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to propse the removal of an owner, if the given address is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to propse the removal of an owner, due to zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to propse the removal of an owner, due to zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should remove a current account from the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should remove a current account from the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should decrease required votes while accounts is removed from the owner's list",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should decrease required votes while accounts is removed from the owner's list",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, if the request is made by an account which is not the user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, if the request is made by an account which is not the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, which is already supported by that user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, which is already supported by that user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to support a removal proposal, for an owner whom was already removed",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to support a removal proposal, for an owner whom was already removed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail voting for the removal of a current owner due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail voting for the removal of a current owner due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for the removal of an owner",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should revoke support for the removal of an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a removal proposal, if the request is made by an account which is not the user",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for a removal proposal, if the request is made by an account which is not the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a removal proposal, which does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for a removal proposal, which does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for a removal proposal, for an owner whom was already removed",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for a removal proposal, for an owner whom was already removed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for removal due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for removal due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for removal due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the removal of a current owner Should fail to revoke support for removal due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new amount of required votes is made by an account which is not an owner",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new amount of required votes is made by an account which is not an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposed new amount of required votes is same as the current one",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposed new amount of required votes is same as the current one",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposed new amount of required votes is invalid amount",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposed new amount of required votes is invalid amount",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, due to zero time duration",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, due to zero time duration",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should change the required number of votes",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should change the required number of votes",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the supporting account for a new required number of votes is not by an owner",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the supporting account for a new required number of votes is not by an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes is already accepted by the user",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes is already accepted by the user",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail voting change the required number of votes due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail voting change the required number of votes due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should revoke support for changing the required number of votes",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should revoke support for changing the required number of votes",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if revoking support for a new required number of votes made by an account is not by an owner",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if revoking support for a new required number of votes made by an account is not by an owner",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes does not exists",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes does not exists",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail, if the proposal for a new required number of votes is already executed",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail, if the proposal for a new required number of votes is already executed",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for changing the required number of votes due to not supporing before",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail to revoke support for changing the required number of votes due to not supporing before",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should fail to revoke support for changing the required number of votes due to time up",
    "fullTitle": "MultiSigWallet.sol Signing the changing of required votes Should fail to revoke support for changing the required number of votes due to time up",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   },
   {
    "title": "Should give proper timestamp",
    "fullTitle": "MultiSigWallet.sol Testing of getCurrentTime function Should give proper timestamp",
-   "file": "tests/multiSigWallet.js",
+   "file": "test/multiSigWallet.js",
    "currentRetry": 0,
    "err": {}
   }
