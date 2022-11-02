@@ -4,10 +4,6 @@ const { ethers, network } = require("hardhat");
 describe("MultiSigWallet.sol", () => {
   let MultiSigWalletFactory, multiSigWallet, multiSigWalletAddress;
 
-  let TestContractFactory, testContract, testContractAddress;
-
-  let TestERC20, testERC20, testERC20Address;
-
   let owner1, owner2, owner3, owner4, owner5, owner6, account1, account2;
   let owner1Address,
     owner2Address,
@@ -30,20 +26,6 @@ describe("MultiSigWallet.sol", () => {
     owner6Address = await owner6.getAddress();
     account1Address = await account1.getAddress();
     account2Address = await account2.getAddress();
-
-    TestContractFactory = await ethers.getContractFactory("TestContract");
-    testContract = await TestContractFactory.deploy();
-    await testContract.deployed();
-    testContractAddress = await testContract.address;
-
-    TestERC20 = await ethers.getContractFactory("TestERC20");
-    testERC20 = await TestERC20.deploy(
-      "Test Token",
-      "TT",
-      ethers.utils.parseEther("1000")
-    );
-    await testERC20.deployed();
-    testERC20Address = await testERC20.address;
 
     MultiSigWalletFactory = await ethers.getContractFactory("MultiSigWallet");
     multiSigWallet = await MultiSigWalletFactory.deploy(
@@ -402,6 +384,15 @@ describe("MultiSigWallet.sol", () => {
   });
 
   describe("Signing the execution of a function from another contract", () => {
+    let TestContractFactory, testContract, testContractAddress;
+
+    beforeEach(async () => {
+      TestContractFactory = await ethers.getContractFactory("TestContract");
+      testContract = await TestContractFactory.deploy();
+      await testContract.deployed();
+      testContractAddress = await testContract.address;
+    });
+
     it("Should successfully change the value of the state variable i", async () => {
       let i = await testContract.i();
       expect(i).to.equal(0);
@@ -458,7 +449,18 @@ describe("MultiSigWallet.sol", () => {
   });
 
   describe("Signing of token transfer to one account", () => {
+    let TestERC20, testERC20, testERC20Address;
+
     beforeEach(async () => {
+      TestERC20 = await ethers.getContractFactory("TestERC20");
+      testERC20 = await TestERC20.deploy(
+        "Test Token",
+        "TT",
+        ethers.utils.parseEther("1000")
+      );
+      await testERC20.deployed();
+      testERC20Address = await testERC20.address;
+
       await testERC20.setBalance(owner1Address, ethers.utils.parseEther("100"));
       await testERC20.transfer(
         multiSigWalletAddress,

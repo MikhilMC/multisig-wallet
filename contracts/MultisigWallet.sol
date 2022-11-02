@@ -309,13 +309,13 @@ contract MultiSigWallet is ReentrancyGuard {
         transaction.numberOfApprovals += 1;
         emit ApproveTransaction(msg.sender, _txId);
         if (transaction.numberOfApprovals == required) {
-            transaction.executed = true;
-
             (bool success, ) = transaction.to.call{value: transaction.value}(
                 transaction.data
             );
 
             require(success, "Tx failed");
+
+            transaction.executed = true;
 
             emit ExecuteTransaction(_txId);
         }
