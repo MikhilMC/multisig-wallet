@@ -75,9 +75,11 @@ contract MultiSigWallet is ReentrancyGuard {
 
     Candidate[] public candidates;
     mapping(uint256 => mapping(address => bool)) public supportCandidate;
+    mapping(address => bool) public isOwnershipCandidate;
 
     OwnershipRemoval[] public removalProposals;
     mapping(uint256 => mapping(address => bool)) public supportRemoval;
+    mapping(address => bool) public isOwnershipRemovalCandidate;
 
     NewRequiredVote[] public requiredVotesProposals;
     mapping(uint256 => mapping(address => bool)) public supportRequiredVotes;
@@ -366,7 +368,12 @@ contract MultiSigWallet is ReentrancyGuard {
         nonReentrant
     {
         require(!isOwner[_candidate], "Already an owner");
+        require(
+            !isOwnershipCandidate[_candidate],
+            "Already a candidate for ownership"
+        );
         require(_timeDuration > 0, "Zero time duration");
+        isOwnershipCandidate[_candidate] = true;
         candidates.push(
             Candidate({
                 candidateAddress: _candidate,
@@ -409,6 +416,7 @@ contract MultiSigWallet is ReentrancyGuard {
             address newOwner = candidate.candidateAddress;
             owners.push(newOwner);
             isOwner[newOwner] = true;
+            isOwnershipCandidate[newOwner] = false;
             if (required == (owners.length / 2)) {
                 required += 1;
             }
@@ -470,7 +478,12 @@ contract MultiSigWallet is ReentrancyGuard {
         nonReentrant
     {
         require(isOwner[_owner], "Not an owner");
+        require(
+            !isOwnershipRemovalCandidate[_owner],
+            "Already a candidate for ownership removal"
+        );
         require(_timeDuration > 0, "Zero time duration");
+        isOwnershipRemovalCandidate[_owner] = true;
         removalProposals.push(
             OwnershipRemoval({
                 ownerAddress: _owner,
@@ -514,6 +527,7 @@ contract MultiSigWallet is ReentrancyGuard {
             address oldOwner = proposal.ownerAddress;
             _removeOwner(oldOwner);
             isOwner[oldOwner] = false;
+            isOwnershipRemovalCandidate[oldOwner] = false;
             emit OwnerRemoved(_proposalId, oldOwner);
         }
     }

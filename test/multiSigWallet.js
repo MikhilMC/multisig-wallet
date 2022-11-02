@@ -173,7 +173,7 @@ describe("MultiSigWallet.sol", () => {
         .submitTransaction(
           owner2Address,
           ethers.utils.parseEther("1"),
-          "0x0000000000000000000000000000000000000000",
+          ethers.constants.HashZero,
           300
         );
     });
@@ -185,7 +185,7 @@ describe("MultiSigWallet.sol", () => {
           .submitTransaction(
             owner2Address,
             ethers.utils.parseEther("1"),
-            "0x0000000000000000000000000000000000000000",
+            ethers.constants.HashZero,
             300
           )
       ).to.be.revertedWith("Not owner");
@@ -198,7 +198,7 @@ describe("MultiSigWallet.sol", () => {
           .submitTransaction(
             owner2Address,
             ethers.utils.parseEther("1"),
-            "0x0000000000000000000000000000000000000000",
+            ethers.constants.HashZero,
             0
           )
       ).to.be.revertedWith("Zero time duration");
@@ -385,7 +385,7 @@ describe("MultiSigWallet.sol", () => {
         .submitTransaction(
           owner2Address,
           ethers.utils.parseEther("1.5"),
-          "0x0000000000000000000000000000000000000000",
+          ethers.constants.HashZero,
           300
         );
 
@@ -544,6 +544,12 @@ describe("MultiSigWallet.sol", () => {
       ).to.be.revertedWith("Not owner");
     });
 
+    it("Should fail, if the inclusion request is for an address which is already a candidate", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).addOwnerCandidate(account1Address, 300)
+      ).to.be.revertedWith("Already a candidate for ownership");
+    });
+
     it("Should fail, if request is for including an account which is already an owner", async () => {
       await expect(
         multiSigWallet.connect(owner1).addOwnerCandidate(owner2Address, 300)
@@ -559,6 +565,10 @@ describe("MultiSigWallet.sol", () => {
     it("Should include the new account into the owner's list", async () => {
       let ownershipStatus = await multiSigWallet.isOwner(account1Address);
       expect(ownershipStatus).to.false;
+      let candidateshipStatus = await multiSigWallet.isOwnershipCandidate(
+        account1Address
+      );
+      expect(candidateshipStatus).to.true;
 
       let candidate = await multiSigWallet.candidates(0);
       expect(candidate["numberOfApprovals"]).to.equal(0);
@@ -606,6 +616,10 @@ describe("MultiSigWallet.sol", () => {
 
       ownershipStatus = await multiSigWallet.isOwner(account1Address);
       expect(ownershipStatus).to.true;
+      candidateshipStatus = await multiSigWallet.isOwnershipCandidate(
+        account1Address
+      );
+      expect(candidateshipStatus).to.false;
     });
 
     it("Should increase required votes while including the new account into the owner's list", async () => {
@@ -761,6 +775,12 @@ describe("MultiSigWallet.sol", () => {
       ).to.be.revertedWith("Not owner");
     });
 
+    it("Should fail to propse the removal of an owner, if that owner is already a candidate for removal", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).removeOwner(owner5Address, 300)
+      ).to.be.revertedWith("Already a candidate for ownership removal");
+    });
+
     it("Should fail to propse the removal of an owner, if the given address is not an owner", async () => {
       await expect(
         multiSigWallet.connect(owner1).removeOwner(account2Address, 300)
@@ -776,6 +796,9 @@ describe("MultiSigWallet.sol", () => {
     it("Should remove a current account from the owner's list", async () => {
       let ownershipStatus = await multiSigWallet.isOwner(owner5Address);
       expect(ownershipStatus).to.true;
+      let candidateshipStatus =
+        await multiSigWallet.isOwnershipRemovalCandidate(owner5Address);
+      expect(candidateshipStatus).to.true;
 
       let proposal = await multiSigWallet.removalProposals(0);
       expect(proposal["numberOfApprovals"]).to.equal(0);
@@ -820,6 +843,10 @@ describe("MultiSigWallet.sol", () => {
 
       ownershipStatus = await multiSigWallet.isOwner(owner5Address);
       expect(ownershipStatus).to.false;
+      candidateshipStatus = await multiSigWallet.isOwnershipRemovalCandidate(
+        owner5Address
+      );
+      expect(candidateshipStatus).to.false;
     });
 
     it("Should decrease required votes while accounts is removed from the owner's list", async () => {
