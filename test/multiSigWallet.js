@@ -450,6 +450,7 @@ describe("MultiSigWallet.sol", () => {
 
   describe("Signing of token transfer to one account", () => {
     let TestERC20, testERC20, testERC20Address;
+    let MyToken, myToken, myTokenAddress;
 
     beforeEach(async () => {
       TestERC20 = await ethers.getContractFactory("TestERC20");
@@ -461,16 +462,24 @@ describe("MultiSigWallet.sol", () => {
       await testERC20.deployed();
       testERC20Address = await testERC20.address;
 
-      await testERC20.setBalance(owner1Address, ethers.utils.parseEther("100"));
-      await testERC20.transfer(
+      MyToken = await ethers.getContractFactory("MyToken");
+      myToken = await MyToken.deploy(
+        "Test Token",
+        "TT",
+        ethers.utils.parseEther("100")
+      );
+      await myToken.deployed();
+      myTokenAddress = await myToken.address;
+
+      await myToken.transfer(
         multiSigWalletAddress,
         ethers.utils.parseEther("100")
       );
     });
 
     it("Should transfer token to the receiver", async () => {
-      let contractBalance = await testERC20.balanceOf(multiSigWalletAddress);
-      let receiverBalance = await testERC20.balanceOf(account1Address);
+      let contractBalance = await myToken.balanceOf(multiSigWalletAddress);
+      let receiverBalance = await myToken.balanceOf(account1Address);
 
       expect(contractBalance).to.equal(ethers.utils.parseEther("100"));
       expect(receiverBalance).to.equal(0);
@@ -482,7 +491,7 @@ describe("MultiSigWallet.sol", () => {
 
       await multiSigWallet
         .connect(owner1)
-        .submitTransaction(testERC20Address, 0, data, 300);
+        .submitTransaction(myTokenAddress, 0, data, 300);
 
       let transaction = await multiSigWallet.transactions(0);
       expect(transaction["numberOfApprovals"]).to.equal(0);
@@ -525,8 +534,8 @@ describe("MultiSigWallet.sol", () => {
       expect(transaction["numberOfApprovals"]).to.equal(4);
       expect(transaction["executed"]).to.true;
 
-      contractBalance = await testERC20.balanceOf(multiSigWalletAddress);
-      receiverBalance = await testERC20.balanceOf(account1Address);
+      contractBalance = await myToken.balanceOf(multiSigWalletAddress);
+      receiverBalance = await myToken.balanceOf(account1Address);
 
       expect(contractBalance).to.equal(0);
       expect(receiverBalance).to.equal(ethers.utils.parseEther("100"));
