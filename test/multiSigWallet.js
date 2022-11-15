@@ -542,6 +542,206 @@ describe("MultiSigWallet.sol", () => {
     });
   });
 
+  describe("Signing of minting of an ERC721 token", () => {
+    let LazyMintNFT, lazyMintNFT, lazyMintNFTAddress;
+    beforeEach(async () => {
+      LazyMintNFT = await ethers.getContractFactory("LazyMintNFT");
+      lazyMintNFT = await LazyMintNFT.deploy("Lazy Mint", "LMINT");
+      await lazyMintNFT.deployed();
+      lazyMintNFTAddress = await lazyMintNFT.address;
+    });
+
+    it("Should be able to sign minting of NFT", async () => {
+      let nftBalance = await lazyMintNFT.balanceOf(account1Address);
+      expect(nftBalance).to.equal(0);
+
+      const data = await lazyMintNFT.getLazyMintData(account1Address);
+
+      await multiSigWallet
+        .connect(owner1)
+        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
+
+      let transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(0);
+      expect(transaction["executed"]).to.false;
+
+      let status = await multiSigWallet.approved(0, owner1Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner1).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner1Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(1);
+
+      status = await multiSigWallet.approved(0, owner2Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner2).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner2Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(2);
+
+      status = await multiSigWallet.approved(0, owner3Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner3).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner3Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(3);
+
+      status = await multiSigWallet.approved(0, owner4Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner4).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner4Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(4);
+      expect(transaction["executed"]).to.true;
+
+      nftBalance = await lazyMintNFT.balanceOf(account1Address);
+      const nftOwner = await lazyMintNFT.ownerOf(0);
+
+      expect(nftBalance).to.equal(1);
+      expect(nftOwner).to.equal(account1Address);
+    });
+
+    it("Should be able to sign burning of NFT", async () => {
+      let nftBalance = await lazyMintNFT.balanceOf(account1Address);
+      expect(nftBalance).to.equal(0);
+
+      await lazyMintNFT.lazyMint(account1Address);
+
+      nftBalance = await lazyMintNFT.balanceOf(account1Address);
+      expect(nftBalance).to.equal(1);
+
+      let nftOwner = await lazyMintNFT.ownerOf(0);
+      expect(nftOwner).to.equal(account1Address);
+
+      const data = await lazyMintNFT.getBurnData(0);
+
+      await lazyMintNFT.connect(account1).approve(multiSigWalletAddress, 0);
+
+      await multiSigWallet
+        .connect(owner1)
+        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
+
+      let transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(0);
+      expect(transaction["executed"]).to.false;
+
+      let status = await multiSigWallet.approved(0, owner1Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner1).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner1Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(1);
+
+      status = await multiSigWallet.approved(0, owner2Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner2).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner2Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(2);
+
+      status = await multiSigWallet.approved(0, owner3Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner3).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner3Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(3);
+
+      status = await multiSigWallet.approved(0, owner4Address);
+      expect(status).to.false;
+      await multiSigWallet.connect(owner4).confirmTransaction(0);
+      status = await multiSigWallet.approved(0, owner4Address);
+      expect(status).to.true;
+
+      transaction = await multiSigWallet.transactions(0);
+      expect(transaction["numberOfApprovals"]).to.equal(4);
+      expect(transaction["executed"]).to.true;
+
+      nftBalance = await lazyMintNFT.balanceOf(account1Address);
+      expect(nftBalance).to.equal(0);
+
+      await expect(lazyMintNFT.ownerOf(0)).to.be.revertedWith(
+        "ERC721: invalid token ID"
+      );
+    });
+
+    it("Should revert to sign minting of NFT, because minting is paused", async () => {
+      const data = await lazyMintNFT.getLazyMintData(account1Address);
+
+      await lazyMintNFT.pause();
+
+      await multiSigWallet
+        .connect(owner1)
+        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
+
+      await multiSigWallet.connect(owner1).confirmTransaction(0);
+
+      await multiSigWallet.connect(owner2).confirmTransaction(0);
+
+      await multiSigWallet.connect(owner3).confirmTransaction(0);
+
+      await expect(
+        multiSigWallet.connect(owner4).confirmTransaction(0)
+      ).to.be.revertedWith("Tx failed");
+    });
+
+    it("Should be able to sign minting of NFT, because minting is unpaused", async () => {
+      let nftBalance = await lazyMintNFT.balanceOf(account1Address);
+      expect(nftBalance).to.equal(0);
+
+      const data = await lazyMintNFT.getLazyMintData(account1Address);
+
+      await lazyMintNFT.pause();
+
+      await multiSigWallet
+        .connect(owner1)
+        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
+
+      await multiSigWallet.connect(owner1).confirmTransaction(0);
+
+      await multiSigWallet.connect(owner2).confirmTransaction(0);
+
+      await multiSigWallet.connect(owner3).confirmTransaction(0);
+
+      await lazyMintNFT.unpause();
+
+      await multiSigWallet.connect(owner4).confirmTransaction(0);
+
+      nftBalance = await lazyMintNFT.balanceOf(account1Address);
+      const nftOwner = await lazyMintNFT.ownerOf(0);
+
+      expect(nftBalance).to.equal(1);
+      expect(nftOwner).to.equal(account1Address);
+    });
+
+    it("Should revert if any account tries to pause minting other than owner", async () => {
+      await expect(lazyMintNFT.connect(account1).pause()).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+
+    it("Should revert if any account tries to unpause minting other than owner", async () => {
+      await lazyMintNFT.pause();
+
+      await expect(lazyMintNFT.connect(account1).unpause()).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
   describe("Signing the inclusion of a new owner", () => {
     beforeEach(async () => {
       await multiSigWallet
@@ -1189,20 +1389,6 @@ describe("MultiSigWallet.sol", () => {
       await expect(
         multiSigWallet.connect(owner1).revokeNewRequiredVotes(0)
       ).to.be.revertedWith("Time up!");
-    });
-  });
-
-  describe("Testing of getCurrentTime function", () => {
-    it("Should give proper timestamp", async () => {
-      const firstTime = await multiSigWallet.getCurrentTime();
-
-      await network.provider.send("evm_increaseTime", [300]);
-      await network.provider.send("evm_mine");
-
-      const secondTime = await multiSigWallet.getCurrentTime();
-      const expectedCurrentTime = firstTime.add(300);
-
-      expect(secondTime).to.equal(expectedCurrentTime);
     });
   });
 });

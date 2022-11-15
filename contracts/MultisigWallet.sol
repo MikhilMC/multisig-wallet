@@ -704,7 +704,7 @@ contract MultiSigWallet is ReentrancyGuard {
     // ---------------END of Changing the required number of votes--------------
 
     /**@dev Function to get the current time.*/
-    function getCurrentTime() public view returns (uint256) {
-        return block.timestamp;
-    }
+    // function getCurrentTime() public view returns (uint256) {
+    //     return block.timestamp;
+    // }
 }
