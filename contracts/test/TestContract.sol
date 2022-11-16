@@ -7,8 +7,4 @@ contract TestContract {
     function callMe(uint256 j) public {
         i += j;
     }
-
-    function getData(uint256 _num) public pure returns (bytes memory) {
-        return abi.encodeWithSignature("callMe(uint256)", _num);
-    }
 }

@@ -31,18 +31,10 @@ contract LazyMintNFT is
         _unpause();
     }
 
-    function lazyMint(address to) public nonReentrant whenNotPaused {
+    function lazyMint(address _to) public nonReentrant whenNotPaused {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
-    }
-
-    function getLazyMintData(address _to) public pure returns (bytes memory) {
-        return abi.encodeWithSignature("lazyMint(address)", _to);
-    }
-
-    function getBurnData(uint256 _tokenId) public pure returns (bytes memory) {
-        return abi.encodeWithSignature("burn(uint256)", _tokenId);
+        _safeMint(_to, tokenId);
     }
 
     function _beforeTokenTransfer(

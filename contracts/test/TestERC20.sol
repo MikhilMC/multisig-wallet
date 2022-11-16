@@ -22,12 +22,4 @@ contract TestERC20 is ERC20 {
             _burn(to, old - amount);
         }
     }
-
-    function getData(address _to, uint256 _num)
-        public
-        pure
-        returns (bytes memory)
-    {
-        return abi.encodeWithSignature("transfer(address,uint256)", _to, _num);
-    }
 }

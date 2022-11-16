@@ -397,7 +397,11 @@ describe("MultiSigWallet.sol", () => {
       let i = await testContract.i();
       expect(i).to.equal(0);
 
-      const data = await testContract.getData(123);
+      const ABI = ["function callMe(uint256 j)"];
+      const iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("callMe", [123]);
+
+      // const data = await testContract.getData(123);
       await multiSigWallet
         .connect(owner1)
         .submitTransaction(testContractAddress, 0, data, 300);
@@ -484,10 +488,17 @@ describe("MultiSigWallet.sol", () => {
       expect(contractBalance).to.equal(ethers.utils.parseEther("100"));
       expect(receiverBalance).to.equal(0);
 
-      const data = await testERC20.getData(
+      let ABI = ["function transfer(address to, uint256 amount)"];
+      let iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("transfer", [
         account1Address,
-        ethers.utils.parseEther("100")
-      );
+        ethers.utils.parseEther("100"),
+      ]);
+
+      // const data = await testERC20.getData(
+      //   account1Address,
+      //   ethers.utils.parseEther("100")
+      // );
 
       await multiSigWallet
         .connect(owner1)
@@ -555,7 +566,11 @@ describe("MultiSigWallet.sol", () => {
       let nftBalance = await lazyMintNFT.balanceOf(account1Address);
       expect(nftBalance).to.equal(0);
 
-      const data = await lazyMintNFT.getLazyMintData(account1Address);
+      let ABI = ["function lazyMint(address _to)"];
+      let iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("lazyMint", [account1Address]);
+
+      // const data = await lazyMintNFT.getLazyMintData(account1Address);
 
       await multiSigWallet
         .connect(owner1)
@@ -621,7 +636,10 @@ describe("MultiSigWallet.sol", () => {
       let nftOwner = await lazyMintNFT.ownerOf(0);
       expect(nftOwner).to.equal(account1Address);
 
-      const data = await lazyMintNFT.getBurnData(0);
+      let ABI = ["function burn(uint256 tokenId)"];
+      let iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("burn", [0]);
+      // const data = await lazyMintNFT.getBurnData(0);
 
       await lazyMintNFT.connect(account1).approve(multiSigWalletAddress, 0);
 
@@ -679,7 +697,10 @@ describe("MultiSigWallet.sol", () => {
     });
 
     it("Should revert to sign minting of NFT, because minting is paused", async () => {
-      const data = await lazyMintNFT.getLazyMintData(account1Address);
+      // const data = await lazyMintNFT.getLazyMintData(account1Address);
+      let ABI = ["function lazyMint(address _to)"];
+      let iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("lazyMint", [account1Address]);
 
       await lazyMintNFT.pause();
 
@@ -702,7 +723,10 @@ describe("MultiSigWallet.sol", () => {
       let nftBalance = await lazyMintNFT.balanceOf(account1Address);
       expect(nftBalance).to.equal(0);
 
-      const data = await lazyMintNFT.getLazyMintData(account1Address);
+      // const data = await lazyMintNFT.getLazyMintData(account1Address);
+      let ABI = ["function lazyMint(address _to)"];
+      let iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("lazyMint", [account1Address]);
 
       await lazyMintNFT.pause();
 

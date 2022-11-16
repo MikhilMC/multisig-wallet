@@ -9,24 +9,40 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  */
 contract MultiSigWallet is ReentrancyGuard {
     event DepositAmount(address indexed sender, uint256 indexed amount);
-    event SubmitTransaction(uint256 indexed txId);
-    event ApproveTransaction(address indexed owner, uint256 indexed txId);
-    event RevokeTransaction(address indexed owner, uint256 indexed txId);
-    event ExecuteTransaction(uint256 indexed txId);
 
-    event SubmitCandidate(uint256 indexed reqId);
-    event SupportCandidate(address indexed owner, uint256 indexed reqId);
-    event RevokeSupport(address indexed owner, uint256 indexed reqId);
+    event SubmitTransactionProposal(uint256 indexed txId);
+    event SupportTransactionProposal(
+        address indexed owner,
+        uint256 indexed txId
+    );
+    event OpposeTransactionProposal(
+        address indexed owner,
+        uint256 indexed txId
+    );
+    event ExecuteTransactionProposal(uint256 indexed txId);
+
+    event SubmitCandidateProposal(uint256 indexed reqId);
+    event SupportCandidateProposal(
+        address indexed owner,
+        uint256 indexed reqId
+    );
+    event OpposeCandidateProposal(address indexed owner, uint256 indexed reqId);
     event OwnerSelected(uint256 indexed reqId, address indexed newOwner);
 
-    event SubmitRemoval(uint256 indexed reqId);
-    event ApproveRemoval(address indexed owner, uint256 indexed reqId);
-    event RevokeApproval(address indexed owner, uint256 indexed reqId);
+    event SubmitRemovalProposal(uint256 indexed reqId);
+    event SupportRemovalProposal(address indexed owner, uint256 indexed reqId);
+    event OpposeRemovalProposal(address indexed owner, uint256 indexed reqId);
     event OwnerRemoved(uint256 indexed reqId, address indexed oldOwner);
 
-    event SubmitNewRequiredVotes(uint256 indexed reqId);
-    event ApproveNewRequiredVotes(address indexed owner, uint256 indexed reqId);
-    event RevokeNewRequiredVotes(address indexed owner, uint256 indexed reqId);
+    event SubmitNewRequiredVotesProposal(uint256 indexed reqId);
+    event SupportNewRequiredVotesProposal(
+        address indexed owner,
+        uint256 indexed reqId
+    );
+    event OpposeNewRequiredVotesProposal(
+        address indexed owner,
+        uint256 indexed reqId
+    );
     event RequiredVotesChanged(
         uint256 indexed reqId,
         uint256 indexed newRequiredVotes
@@ -68,12 +84,12 @@ contract MultiSigWallet is ReentrancyGuard {
 
     address[] public owners;
     mapping(address => bool) public isOwner;
-    uint256 public required;
+    uint256 public requiredVotes;
 
-    Transaction[] public transactions;
-    mapping(uint256 => mapping(address => bool)) public approved;
+    Transaction[] public transactionProposals;
+    mapping(uint256 => mapping(address => bool)) public supportTransaction;
 
-    Candidate[] public candidates;
+    Candidate[] public candidateProposals;
     mapping(uint256 => mapping(address => bool)) public supportCandidate;
     mapping(address => bool) public isOwnershipCandidate;
 
@@ -95,24 +111,33 @@ contract MultiSigWallet is ReentrancyGuard {
     /**@dev Modifier used for restricting access
      * only if the transaction data exists
      */
-    modifier txExists(uint256 _txId) {
-        require(_txId < transactions.length, "Tx does not exists");
+    modifier transactionProposalExists(uint256 _txId) {
+        require(
+            _txId < transactionProposals.length,
+            "Transaction does not exists"
+        );
         _;
     }
 
     /**@dev Modifier used for restricting access
      * only if the transaction is not approved by an owner
      */
-    modifier notApproved(uint256 _txId) {
-        require(!approved[_txId][msg.sender], "Tx already approved");
+    modifier transactionProposalNotSupported(uint256 _txId) {
+        require(
+            !supportTransaction[_txId][msg.sender],
+            "Transaction already supported"
+        );
         _;
     }
 
     /**@dev Modifier used for restricting access
      * only if the transaction is not executed
      */
-    modifier notExecuted(uint256 _txId) {
-        require(!transactions[_txId].executed, "Tx already executed");
+    modifier transactionNotExecuted(uint256 _txId) {
+        require(
+            !transactionProposals[_txId].executed,
+            "Transaction already executed"
+        );
         _;
     }
 
@@ -120,17 +145,20 @@ contract MultiSigWallet is ReentrancyGuard {
      * only if the candidate data exists
      */
     modifier candidateExists(uint256 _candidateId) {
-        require(_candidateId < candidates.length, "Candidate does not exists");
+        require(
+            _candidateId < candidateProposals.length,
+            "Candidate does not exists"
+        );
         _;
     }
 
     /**@dev Modifier used for restricting access
      * only if the candidate is not supported by that owner
      */
-    modifier notSupported(uint256 _candidateId) {
+    modifier candidateNotSupported(uint256 _candidateId) {
         require(
             !supportCandidate[_candidateId][msg.sender],
-            "Candidate already approved"
+            "Candidate already supported"
         );
         _;
     }
@@ -138,9 +166,9 @@ contract MultiSigWallet is ReentrancyGuard {
     /**@dev Modifier used for restricting access
      * only if the candidate is not elected as a new owner
      */
-    modifier notElected(uint256 _candidateId) {
+    modifier candidateNotElected(uint256 _candidateId) {
         require(
-            !candidates[_candidateId].selected,
+            !candidateProposals[_candidateId].selected,
             "Candidate already elected"
         );
         _;
@@ -161,7 +189,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * only if the removal proposal data for an owner
      * is not supported by that user
      */
-    modifier notSupportedRemoval(uint256 _proposalId) {
+    modifier removalProposalNotSupported(uint256 _proposalId) {
         require(
             !supportRemoval[_proposalId][msg.sender],
             "Removal proposal already approved"
@@ -173,7 +201,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * only if the removal proposal data for an owner
      * is not completed and that owner is not removed.
      */
-    modifier notRemoved(uint256 _proposalId) {
+    modifier ownerNotRemoved(uint256 _proposalId) {
         require(
             !removalProposals[_proposalId].removed,
             "Owner already removed"
@@ -185,7 +213,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * only if the data about the proposal for a
      * new required votes exists.
      */
-    modifier newRequiredVotesExists(uint256 _proposalId) {
+    modifier newRequiredVotesProposalExists(uint256 _proposalId) {
         require(
             _proposalId < requiredVotesProposals.length,
             "New required votes proposal does not exists"
@@ -197,7 +225,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * only if the data about the proposal for a
      * new required votes is supported by that user.
      */
-    modifier notApprovedRequiredVotes(uint256 _proposalId) {
+    modifier requiredVotesProposalNotApproved(uint256 _proposalId) {
         require(
             !supportRequiredVotes[_proposalId][msg.sender],
             "New required votes proposal already approved"
@@ -210,7 +238,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * new required votes is selected and
      * the required votes is changed.
      */
-    modifier notChanged(uint256 _proposalId) {
+    modifier requiredVotesNotChanged(uint256 _proposalId) {
         require(
             !requiredVotesProposals[_proposalId].changed,
             "Required votes proposal already changed"
@@ -233,14 +261,14 @@ contract MultiSigWallet is ReentrancyGuard {
         for (uint256 i; i < _owners.length; i++) {
             address owner = _owners[i];
 
-            require(owner != address(0), "Invalid address");
+            require(owner != address(0), "Zero address");
             require(!isOwner[owner], "Owner is not unique");
 
             isOwner[owner] = true;
             owners.push(owner);
         }
 
-        required = _required;
+        requiredVotes = _required;
     }
 
     /**@dev function to receive ether to the contract.*/
@@ -262,14 +290,14 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _timeDuration time duration given to the owners to make decision
      *        on the given transaction
      */
-    function submitTransaction(
+    function submitTransactionProposal(
         address _to,
         uint256 _value,
         bytes memory _data,
         uint256 _timeDuration
     ) external onlyOwner nonReentrant {
         require(_timeDuration > 0, "Zero time duration");
-        transactions.push(
+        transactionProposals.push(
             Transaction({
                 to: _to,
                 value: _value,
@@ -281,7 +309,7 @@ contract MultiSigWallet is ReentrancyGuard {
             })
         );
 
-        emit SubmitTransaction(transactions.length - 1);
+        emit SubmitTransactionProposal(transactionProposals.length - 1);
     }
 
     /**@dev Supports the proposal for a new transaction by an owner
@@ -295,29 +323,29 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _txId index in which the transaction data
      *        lies in the transactions array
      */
-    function confirmTransaction(uint256 _txId)
+    function supportTransactionProposal(uint256 _txId)
         external
         onlyOwner
-        txExists(_txId)
-        notApproved(_txId)
-        notExecuted(_txId)
+        transactionProposalExists(_txId)
+        transactionProposalNotSupported(_txId)
+        transactionNotExecuted(_txId)
         nonReentrant
     {
-        Transaction storage transaction = transactions[_txId];
+        Transaction storage transaction = transactionProposals[_txId];
         require(transaction.endTime >= block.timestamp, "Time up!");
-        approved[_txId][msg.sender] = true;
+        supportTransaction[_txId][msg.sender] = true;
         transaction.numberOfApprovals += 1;
-        emit ApproveTransaction(msg.sender, _txId);
-        if (transaction.numberOfApprovals == required) {
+        emit SupportTransactionProposal(msg.sender, _txId);
+        if (transaction.numberOfApprovals == requiredVotes) {
             (bool success, ) = transaction.to.call{value: transaction.value}(
                 transaction.data
             );
 
-            require(success, "Tx failed");
+            require(success, "Transaction failed");
 
             transaction.executed = true;
 
-            emit ExecuteTransaction(_txId);
+            emit ExecuteTransactionProposal(_txId);
         }
     }
 
@@ -332,18 +360,24 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _txId index in which the transaction data
      *        lies in the transactions array
      */
-    function revokeConfirmation(uint256 _txId)
+    function opposeTransactionProposal(uint256 _txId)
         external
         onlyOwner
-        txExists(_txId)
-        notExecuted(_txId)
+        transactionProposalExists(_txId)
+        transactionNotExecuted(_txId)
         nonReentrant
     {
-        require(transactions[_txId].endTime >= block.timestamp, "Time up!");
-        require(approved[_txId][msg.sender], "Tx not approved");
-        transactions[_txId].numberOfApprovals -= 1;
-        approved[_txId][msg.sender] = false;
-        emit RevokeTransaction(msg.sender, _txId);
+        require(
+            transactionProposals[_txId].endTime >= block.timestamp,
+            "Time up!"
+        );
+        require(
+            supportTransaction[_txId][msg.sender],
+            "Transaction not approved"
+        );
+        transactionProposals[_txId].numberOfApprovals -= 1;
+        supportTransaction[_txId][msg.sender] = false;
+        emit OpposeTransactionProposal(msg.sender, _txId);
     }
 
     // ---------------------END of Election for a transaction--------------
@@ -367,6 +401,7 @@ contract MultiSigWallet is ReentrancyGuard {
         onlyOwner
         nonReentrant
     {
+        require(_candidate != address(0), "Zero address");
         require(!isOwner[_candidate], "Already an owner");
         require(
             !isOwnershipCandidate[_candidate],
@@ -374,7 +409,7 @@ contract MultiSigWallet is ReentrancyGuard {
         );
         require(_timeDuration > 0, "Zero time duration");
         isOwnershipCandidate[_candidate] = true;
-        candidates.push(
+        candidateProposals.push(
             Candidate({
                 candidateAddress: _candidate,
                 numberOfApprovals: 0,
@@ -384,7 +419,7 @@ contract MultiSigWallet is ReentrancyGuard {
             })
         );
 
-        emit SubmitCandidate(candidates.length - 1);
+        emit SubmitCandidateProposal(candidateProposals.length - 1);
     }
 
     /**@dev Supports the proposal for a new ownership candidate by an owner
@@ -402,23 +437,23 @@ contract MultiSigWallet is ReentrancyGuard {
         external
         onlyOwner
         candidateExists(_candidateId)
-        notSupported(_candidateId)
-        notElected(_candidateId)
+        candidateNotSupported(_candidateId)
+        candidateNotElected(_candidateId)
         nonReentrant
     {
-        Candidate storage candidate = candidates[_candidateId];
+        Candidate storage candidate = candidateProposals[_candidateId];
         require(candidate.endTime >= block.timestamp, "Time up!");
         supportCandidate[_candidateId][msg.sender] = true;
         candidate.numberOfApprovals += 1;
-        emit SupportCandidate(msg.sender, _candidateId);
-        if (candidate.numberOfApprovals == required) {
+        emit SupportCandidateProposal(msg.sender, _candidateId);
+        if (candidate.numberOfApprovals == requiredVotes) {
             candidate.selected = true;
             address newOwner = candidate.candidateAddress;
             owners.push(newOwner);
             isOwner[newOwner] = true;
             isOwnershipCandidate[newOwner] = false;
-            if (required == (owners.length / 2)) {
-                required += 1;
+            if (requiredVotes == (owners.length / 2)) {
+                requiredVotes += 1;
             }
             emit OwnerSelected(_candidateId, newOwner);
         }
@@ -436,24 +471,24 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _candidateId index in which the candidateship proposal data
      *        lies in the candidates array
      */
-    function revokeVote(uint256 _candidateId)
+    function rejectCandidate(uint256 _candidateId)
         external
         onlyOwner
         candidateExists(_candidateId)
-        notElected(_candidateId)
+        candidateNotElected(_candidateId)
         nonReentrant
     {
         require(
-            candidates[_candidateId].endTime >= block.timestamp,
+            candidateProposals[_candidateId].endTime >= block.timestamp,
             "Time up!"
         );
         require(
             supportCandidate[_candidateId][msg.sender],
             "Candidate not approved"
         );
-        candidates[_candidateId].numberOfApprovals -= 1;
+        candidateProposals[_candidateId].numberOfApprovals -= 1;
         supportCandidate[_candidateId][msg.sender] = false;
-        emit RevokeSupport(msg.sender, _candidateId);
+        emit OpposeCandidateProposal(msg.sender, _candidateId);
     }
 
     // ---------------------END of Election for a new owner--------------
@@ -494,7 +529,7 @@ contract MultiSigWallet is ReentrancyGuard {
             })
         );
 
-        emit SubmitRemoval(removalProposals.length - 1);
+        emit SubmitRemovalProposal(removalProposals.length - 1);
     }
 
     /**@dev Supports the proposal for removing a current owner by an owner
@@ -513,16 +548,16 @@ contract MultiSigWallet is ReentrancyGuard {
         external
         onlyOwner
         removalProposalExists(_proposalId)
-        notSupportedRemoval(_proposalId)
-        notRemoved(_proposalId)
+        removalProposalNotSupported(_proposalId)
+        ownerNotRemoved(_proposalId)
         nonReentrant
     {
         OwnershipRemoval storage proposal = removalProposals[_proposalId];
         require(proposal.endTime >= block.timestamp, "Time up!");
         supportRemoval[_proposalId][msg.sender] = true;
         proposal.numberOfApprovals += 1;
-        emit ApproveRemoval(msg.sender, _proposalId);
-        if (proposal.numberOfApprovals == required) {
+        emit SupportRemovalProposal(msg.sender, _proposalId);
+        if (proposal.numberOfApprovals == requiredVotes) {
             proposal.removed = true;
             address oldOwner = proposal.ownerAddress;
             _removeOwner(oldOwner);
@@ -548,8 +583,8 @@ contract MultiSigWallet is ReentrancyGuard {
         }
         owners[index] = owners[owners.length - 1];
         owners.pop();
-        if (required == owners.length) {
-            required -= 1;
+        if (requiredVotes == owners.length) {
+            requiredVotes -= 1;
         }
     }
 
@@ -570,7 +605,7 @@ contract MultiSigWallet is ReentrancyGuard {
         external
         onlyOwner
         removalProposalExists(_proposalId)
-        notRemoved(_proposalId)
+        ownerNotRemoved(_proposalId)
         nonReentrant
     {
         require(
@@ -583,7 +618,7 @@ contract MultiSigWallet is ReentrancyGuard {
         );
         removalProposals[_proposalId].numberOfApprovals -= 1;
         supportRemoval[_proposalId][msg.sender] = false;
-        emit RevokeApproval(msg.sender, _proposalId);
+        emit OpposeRemovalProposal(msg.sender, _proposalId);
     }
 
     // ---------------------END of Removal of a current owner--------------
@@ -610,7 +645,7 @@ contract MultiSigWallet is ReentrancyGuard {
         onlyOwner
         nonReentrant
     {
-        require(_reqVotes != required, "Already the same required votes");
+        require(_reqVotes != requiredVotes, "Already the same required votes");
         require(
             _reqVotes >= ((owners.length / 2) + 1) && _reqVotes < owners.length,
             "Invalid number of required votes"
@@ -626,7 +661,7 @@ contract MultiSigWallet is ReentrancyGuard {
             })
         );
 
-        emit SubmitNewRequiredVotes(requiredVotesProposals.length - 1);
+        emit SubmitNewRequiredVotesProposal(requiredVotesProposals.length - 1);
     }
 
     /**@dev Supports the proposal for the new required amount of votes by an owner
@@ -647,20 +682,20 @@ contract MultiSigWallet is ReentrancyGuard {
     function approveNewRequiredVotes(uint256 _proposalId)
         external
         onlyOwner
-        newRequiredVotesExists(_proposalId)
-        notApprovedRequiredVotes(_proposalId)
-        notChanged(_proposalId)
+        newRequiredVotesProposalExists(_proposalId)
+        requiredVotesProposalNotApproved(_proposalId)
+        requiredVotesNotChanged(_proposalId)
         nonReentrant
     {
         NewRequiredVote storage proposal = requiredVotesProposals[_proposalId];
         require(proposal.endTime >= block.timestamp, "Time up!");
         supportRequiredVotes[_proposalId][msg.sender] = true;
         proposal.numberOfApprovals += 1;
-        emit ApproveNewRequiredVotes(msg.sender, _proposalId);
-        if (proposal.numberOfApprovals == required) {
+        emit SupportNewRequiredVotesProposal(msg.sender, _proposalId);
+        if (proposal.numberOfApprovals == requiredVotes) {
             proposal.changed = true;
             uint256 reqVotes = proposal.newRequiredVotes;
-            required = reqVotes;
+            requiredVotes = reqVotes;
             emit RequiredVotesChanged(_proposalId, reqVotes);
         }
     }
@@ -684,8 +719,8 @@ contract MultiSigWallet is ReentrancyGuard {
     function revokeNewRequiredVotes(uint256 _proposalId)
         external
         onlyOwner
-        newRequiredVotesExists(_proposalId)
-        notChanged(_proposalId)
+        newRequiredVotesProposalExists(_proposalId)
+        requiredVotesNotChanged(_proposalId)
         nonReentrant
     {
         require(
@@ -698,7 +733,7 @@ contract MultiSigWallet is ReentrancyGuard {
         );
         requiredVotesProposals[_proposalId].numberOfApprovals -= 1;
         supportRequiredVotes[_proposalId][msg.sender] = false;
-        emit RevokeNewRequiredVotes(msg.sender, _proposalId);
+        emit OpposeNewRequiredVotesProposal(msg.sender, _proposalId);
     }
 
     // ---------------END of Changing the required number of votes--------------
