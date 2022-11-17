@@ -507,7 +507,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _timeDuration time duration given to the owners to make decision
      *        on the given removal proposal of an owner.
      */
-    function removeOwner(address _owner, uint256 _timeDuration)
+    function removeOwnerProposal(address _owner, uint256 _timeDuration)
         external
         onlyOwner
         nonReentrant
@@ -544,7 +544,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _proposalId index in which the removal proposal data
      *        lies in the removalProposals array
      */
-    function voteRemovalProposal(uint256 _proposalId)
+    function supportRemovalProposal(uint256 _proposalId)
         external
         onlyOwner
         removalProposalExists(_proposalId)
@@ -601,7 +601,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _proposalId index in which the removal proposal data
      *        lies in the removalProposals array
      */
-    function revokeRemovalSupport(uint256 _proposalId)
+    function opposeRemovalProposal(uint256 _proposalId)
         external
         onlyOwner
         removalProposalExists(_proposalId)
@@ -679,7 +679,7 @@ contract MultiSigWallet is ReentrancyGuard {
      *        for the new required amount of votes lies in
      *        the requiredVotesProposals array
      */
-    function approveNewRequiredVotes(uint256 _proposalId)
+    function supportNewRequiredVotes(uint256 _proposalId)
         external
         onlyOwner
         newRequiredVotesProposalExists(_proposalId)
@@ -716,7 +716,7 @@ contract MultiSigWallet is ReentrancyGuard {
      *        for the new required amount of votes lies in
      *        the requiredVotesProposals array
      */
-    function revokeNewRequiredVotes(uint256 _proposalId)
+    function opposeNewRequiredVotes(uint256 _proposalId)
         external
         onlyOwner
         newRequiredVotesProposalExists(_proposalId)

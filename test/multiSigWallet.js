@@ -86,85 +86,102 @@ describe("MultiSigWallet.sol", () => {
     });
 
     it("Should have correct number of required votes", async () => {
-      let reqVotes = await multiSigWallet.required();
+      let reqVotes = await multiSigWallet.requiredVotes();
       expect(reqVotes).to.equal(4);
     });
   });
 
   describe("Setup errors", () => {
-    it("Should revert if the array of owners is empty", async () => {
-      const MultiSigWalletError = await ethers.getContractFactory(
-        "MultiSigWallet"
-      );
-      await expect(MultiSigWalletError.deploy([], 4)).to.be.revertedWith(
+    it("Should revert if owners array length is 0", async () => {
+      const MultiSigWallet = await ethers.getContractFactory("MultiSigWallet");
+      await expect(MultiSigWallet.deploy([], 4)).to.be.revertedWith(
         "Owners required"
       );
     });
 
-    it("Should revert if the invalid number of votes is invalid", async () => {
-      const MultiSigWalletError = await ethers.getContractFactory(
-        "MultiSigWallet"
-      );
+    it("Should revert if required votes is invalid", async () => {
+      const MultiSigWallet = await ethers.getContractFactory("MultiSigWallet");
       await expect(
-        MultiSigWalletError.deploy(
-          [owner1Address, owner2Address, owner3Address, owner4Address],
-          1
+        MultiSigWallet.deploy(
+          [
+            owner1Address,
+            owner2Address,
+            owner3Address,
+            owner4Address,
+            owner5Address,
+            owner6Address,
+          ],
+          7
         )
       ).to.be.revertedWith("Invalid number of required votes");
     });
 
-    it("Should revert if any of the owners is a zero address", async () => {
-      const MultiSigWalletError = await ethers.getContractFactory(
-        "MultiSigWallet"
-      );
+    it("Should revert if any of the owner is a zero address", async () => {
+      const MultiSigWallet = await ethers.getContractFactory("MultiSigWallet");
       await expect(
-        MultiSigWalletError.deploy(
+        MultiSigWallet.deploy(
           [
-            ethers.constants.AddressZero,
+            owner1Address,
             owner2Address,
-            owner3Address,
+            ethers.constants.AddressZero,
             owner4Address,
+            owner5Address,
+            owner6Address,
           ],
-          3
+          4
         )
-      ).to.be.revertedWith("Invalid address");
+      ).to.be.revertedWith("Zero address");
     });
 
-    it("Should revert if any of the addresses in owners list is got repeated", async () => {
-      const MultiSigWalletError = await ethers.getContractFactory(
-        "MultiSigWallet"
-      );
+    it("Should revert if any of the owner is a zero address", async () => {
+      const MultiSigWallet = await ethers.getContractFactory("MultiSigWallet");
       await expect(
-        MultiSigWalletError.deploy(
-          [owner1Address, owner2Address, owner1Address, owner4Address],
-          3
+        MultiSigWallet.deploy(
+          [
+            owner1Address,
+            owner2Address,
+            owner3Address,
+            owner3Address,
+            owner5Address,
+            owner6Address,
+          ],
+          4
         )
       ).to.be.revertedWith("Owner is not unique");
     });
   });
 
-  describe("Signing the transaction of ether transfer from one account to another", () => {
-    beforeEach(async () => {
-      const tx = await owner1.sendTransaction({
-        to: multiSigWalletAddress,
-        value: ethers.utils.parseEther("1"),
-      });
-
+  describe("Submitting the transaction proposals", () => {
+    it("Should be able to submit transaction proposal", async () => {
       await multiSigWallet
         .connect(owner1)
-        .submitTransaction(
+        .submitTransactionProposal(
           owner2Address,
           ethers.utils.parseEther("1"),
           ethers.constants.HashZero,
           300
         );
+
+      const transaction = await multiSigWallet.transactionProposals(0);
+      const blockBeforeNumber = await ethers.provider.getBlockNumber();
+      const blockBefore = await ethers.provider.getBlock(blockBeforeNumber);
+      const startTime = blockBefore.timestamp;
+      const endTime = startTime + 300;
+
+      expect(transaction["to"]).to.equal(owner2Address);
+      expect(transaction["value"]).to.equal(ethers.utils.parseEther("1"));
+      expect(transaction["data"]).to.equal(ethers.constants.HashZero);
+      expect(transaction["numberOfApprovals"]).to.equal(0);
+      expect(transaction["startTime"]).to.equal(startTime);
+      expect(transaction["endTime"]).to.equal(endTime);
+      expect(transaction["executed"]).to.false;
     });
 
-    it("Should fail if submitting a transaction is done by an account which is not an owner", async () => {
+    it("Should revert from submitting transaction, because the function called address is not an owner", async () => {
       await expect(
         multiSigWallet
           .connect(account1)
-          .submitTransaction(
+          .submitTransactionProposal(
             owner2Address,
             ethers.utils.parseEther("1"),
             ethers.constants.HashZero,
@@ -173,11 +190,11 @@ describe("MultiSigWallet.sol", () => {
       ).to.be.revertedWith("Not owner");
     });
 
-    it("Should fail if submitting a transaction zero time duration", async () => {
+    it("Should revert from submitting transaction, because the time duration is 0", async () => {
       await expect(
         multiSigWallet
           .connect(owner1)
-          .submitTransaction(
+          .submitTransactionProposal(
             owner2Address,
             ethers.utils.parseEther("1"),
             ethers.constants.HashZero,
@@ -185,54 +202,156 @@ describe("MultiSigWallet.sol", () => {
           )
       ).to.be.revertedWith("Zero time duration");
     });
+  });
 
-    it("Should successfully send ether", async () => {
+  describe("Supporting a transaction proposal", () => {
+    beforeEach(async () => {
+      await multiSigWallet
+        .connect(owner1)
+        .submitTransactionProposal(
+          owner2Address,
+          ethers.utils.parseEther("1"),
+          ethers.constants.HashZero,
+          300
+        );
+    });
+
+    it("Should be able to support transaction proposal", async () => {
+      let transaction = await multiSigWallet.transactionProposals(0);
+      expect(transaction["numberOfApprovals"]).to.equal(0);
+
+      let status = await multiSigWallet.supportTransaction(0, owner1Address);
+      expect(status).to.false;
+
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
+
+      transaction = await multiSigWallet.transactionProposals(0);
+      expect(transaction["numberOfApprovals"]).to.equal(1);
+
+      status = await multiSigWallet.supportTransaction(0, owner1Address);
+      expect(status).to.true;
+    });
+
+    it("Should revert, if a non-owner supports transaction proposal", async () => {
+      await expect(
+        multiSigWallet.connect(account1).supportTransactionProposal(0)
+      ).to.be.revertedWith("Not owner");
+    });
+
+    it("Should revert, if we try to support transaction proposal which does not exists", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).supportTransactionProposal(1)
+      ).to.be.revertedWith("Transaction does not exists");
+    });
+
+    it("Should revert, if we try to support transaction proposal which is already supported", async () => {
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
+
+      await expect(
+        multiSigWallet.connect(owner1).supportTransactionProposal(0)
+      ).to.be.revertedWith("Transaction already supported");
+    });
+
+    it("Should revert, if we try to support transaction proposal due to time expired", async () => {
+      await network.provider.send("evm_increaseTime", [300]);
+      await network.provider.send("evm_mine");
+
+      await expect(
+        multiSigWallet.connect(owner1).supportTransactionProposal(0)
+      ).to.be.revertedWith("Time up!");
+    });
+
+    it("Should revert, if we try to support transaction proposal which is already executed", async () => {
+      const tx = await owner1.sendTransaction({
+        to: multiSigWalletAddress,
+        value: ethers.utils.parseEther("1"),
+      });
+
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
+
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
+
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
+
+      await multiSigWallet.connect(owner4).supportTransactionProposal(0);
+
+      await expect(
+        multiSigWallet.connect(owner5).supportTransactionProposal(0)
+      ).to.be.revertedWith("Transaction already executed");
+    });
+
+    it("Should be able to execute transaction by voting for ether transfer", async () => {
+      const tx = await owner1.sendTransaction({
+        to: multiSigWalletAddress,
+        value: ethers.utils.parseEther("1"),
+      });
+
       const initialBalance = await ethers.provider.getBalance(owner2Address);
       let contractBalance = await ethers.provider.getBalance(
         multiSigWalletAddress
       );
       expect(contractBalance).to.equal(ethers.utils.parseEther("1"));
 
-      let transaction = await multiSigWallet.transactions(0);
+      let transaction = await multiSigWallet.transactionProposals(0);
       expect(transaction["numberOfApprovals"]).to.equal(0);
       expect(transaction["executed"]).to.false;
 
-      let status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.true;
+      let owner1status = await multiSigWallet.supportTransaction(
+        0,
+        owner1Address
+      );
+      expect(owner1status).to.false;
 
-      transaction = await multiSigWallet.transactions(0);
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
+
+      transaction = await multiSigWallet.transactionProposals(0);
       expect(transaction["numberOfApprovals"]).to.equal(1);
 
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.true;
+      owner1status = await multiSigWallet.supportTransaction(0, owner1Address);
+      expect(owner1status).to.true;
 
-      transaction = await multiSigWallet.transactions(0);
+      let owner2status = await multiSigWallet.supportTransaction(
+        0,
+        owner2Address
+      );
+      expect(owner2status).to.false;
+
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
+
+      transaction = await multiSigWallet.transactionProposals(0);
       expect(transaction["numberOfApprovals"]).to.equal(2);
 
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.true;
+      owner2status = await multiSigWallet.supportTransaction(0, owner2Address);
+      expect(owner2status).to.true;
 
-      transaction = await multiSigWallet.transactions(0);
+      let owner3status = await multiSigWallet.supportTransaction(
+        0,
+        owner3Address
+      );
+      expect(owner3status).to.false;
+
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
+
+      transaction = await multiSigWallet.transactionProposals(0);
       expect(transaction["numberOfApprovals"]).to.equal(3);
 
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.true;
+      owner3status = await multiSigWallet.supportTransaction(0, owner3Address);
+      expect(owner3status).to.true;
 
-      transaction = await multiSigWallet.transactions(0);
+      let owner4status = await multiSigWallet.supportTransaction(
+        0,
+        owner4Address
+      );
+      expect(owner4status).to.false;
+
+      await multiSigWallet.connect(owner4).supportTransactionProposal(0);
+
+      transaction = await multiSigWallet.transactionProposals(0);
       expect(transaction["numberOfApprovals"]).to.equal(4);
       expect(transaction["executed"]).to.true;
+
+      owner4status = await multiSigWallet.supportTransaction(0, owner4Address);
+      expect(owner4status).to.true;
 
       balance = await ethers.provider.getBalance(owner2Address);
 
@@ -245,305 +364,90 @@ describe("MultiSigWallet.sol", () => {
       expect(contractBalance).to.equal(0);
     });
 
-    it("Should fail if supporting a transaction is done by an account which is not an owner", async () => {
-      await expect(
-        multiSigWallet.connect(account1).confirmTransaction(0)
-      ).to.be.revertedWith("Not owner");
-    });
+    it("Should revert to execute transaction by voting, if contract have enough ether balance", async () => {
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
 
-    it("Should fail if supporting a transaction which does not exists", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).confirmTransaction(1)
-      ).to.be.revertedWith("Tx does not exists");
-    });
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
 
-    it("Should fail if supporting a transaction which that account already supported previously", async () => {
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
 
       await expect(
-        multiSigWallet.connect(owner1).confirmTransaction(0)
-      ).to.be.revertedWith("Tx already approved");
-    });
-
-    it("Should fail if supporting a transaction which is already executed", async () => {
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-
-      await expect(
-        multiSigWallet.connect(owner5).confirmTransaction(0)
-      ).to.be.revertedWith("Tx already executed");
-    });
-
-    it("Should fail the ether transfer due to time up", async () => {
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-
-      await network.provider.send("evm_increaseTime", [300]);
-      await network.provider.send("evm_mine");
-
-      await expect(
-        multiSigWallet.connect(owner4).confirmTransaction(0)
-      ).to.be.revertedWith("Time up!");
-    });
-
-    it("Should revoke support for a transaction", async () => {
-      let transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(0);
-
-      let status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.false;
-
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-
-      status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(1);
-
-      await multiSigWallet.connect(owner1).revokeConfirmation(0);
-
-      status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.false;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(0);
-    });
-
-    it("Should fail if revoking support for a transaction is done by an account which is not an owner", async () => {
-      await expect(
-        multiSigWallet.connect(account1).revokeConfirmation(0)
-      ).to.be.revertedWith("Not owner");
-    });
-
-    it("Should fail if revoking support for a transaction which does not exists", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).revokeConfirmation(1)
-      ).to.be.revertedWith("Tx does not exists");
-    });
-
-    it("Should fail if revoking support for a transaction which is already executed", async () => {
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-
-      await expect(
-        multiSigWallet.connect(owner4).revokeConfirmation(0)
-      ).to.be.revertedWith("Tx already executed");
-    });
-
-    it("Should fail to revoke support method due to not supporing before", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).revokeConfirmation(0)
-      ).to.be.revertedWith("Tx not approved");
-    });
-
-    it("Should fail to revoke support method due to time up", async () => {
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-
-      await network.provider.send("evm_increaseTime", [300]);
-      await network.provider.send("evm_mine");
-
-      await expect(
-        multiSigWallet.connect(owner1).revokeConfirmation(0)
-      ).to.be.revertedWith("Time up!");
-    });
-
-    it("Should fail the ether transfer due to less balance", async () => {
-      await multiSigWallet
-        .connect(owner1)
-        .submitTransaction(
-          owner2Address,
-          ethers.utils.parseEther("1.5"),
-          ethers.constants.HashZero,
-          300
-        );
-
-      await multiSigWallet.connect(owner1).confirmTransaction(1);
-
-      await multiSigWallet.connect(owner2).confirmTransaction(1);
-
-      await multiSigWallet.connect(owner3).confirmTransaction(1);
-
-      await expect(
-        multiSigWallet.connect(owner4).confirmTransaction(1)
-      ).to.be.revertedWith("Tx failed");
+        multiSigWallet.connect(owner4).supportTransactionProposal(0)
+      ).to.be.revertedWith("Transaction failed");
     });
   });
 
-  describe("Signing the execution of a function from another contract", () => {
-    let TestContractFactory, testContract, testContractAddress;
-
-    beforeEach(async () => {
-      TestContractFactory = await ethers.getContractFactory("TestContract");
-      testContract = await TestContractFactory.deploy();
+  describe("Executing functions from another smart contracts", () => {
+    it("Should be able to change a state variable using a function", async () => {
+      const TestContractFactory = await ethers.getContractFactory(
+        "TestContract"
+      );
+      const testContract = await TestContractFactory.deploy();
       await testContract.deployed();
-      testContractAddress = await testContract.address;
-    });
-
-    it("Should successfully change the value of the state variable i", async () => {
-      let i = await testContract.i();
-      expect(i).to.equal(0);
+      const testContractAddress = await testContract.address;
 
       const ABI = ["function callMe(uint256 j)"];
       const iface = new ethers.utils.Interface(ABI);
       const data = iface.encodeFunctionData("callMe", [123]);
 
-      // const data = await testContract.getData(123);
+      let i = await testContract.i();
+      expect(i).to.equal(0);
+
       await multiSigWallet
         .connect(owner1)
-        .submitTransaction(testContractAddress, 0, data, 300);
+        .submitTransactionProposal(testContractAddress, 0, data, 300);
 
-      let transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(0);
-      expect(transaction["executed"]).to.false;
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
 
-      let status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.true;
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
 
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(1);
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
 
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(2);
-
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(3);
-
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(4);
-      expect(transaction["executed"]).to.true;
+      await multiSigWallet.connect(owner4).supportTransactionProposal(0);
 
       i = await testContract.i();
       expect(i).to.equal(123);
     });
-  });
 
-  describe("Signing of token transfer to one account", () => {
-    let TestERC20, testERC20, testERC20Address;
-    let MyToken, myToken, myTokenAddress;
-
-    beforeEach(async () => {
-      TestERC20 = await ethers.getContractFactory("TestERC20");
-      testERC20 = await TestERC20.deploy(
-        "Test Token",
-        "TT",
-        ethers.utils.parseEther("1000")
-      );
-      await testERC20.deployed();
-      testERC20Address = await testERC20.address;
-
-      MyToken = await ethers.getContractFactory("MyToken");
-      myToken = await MyToken.deploy(
+    it("Should be able to transfer ERC20 token", async () => {
+      const MyToken = await ethers.getContractFactory("MyToken");
+      const myToken = await MyToken.deploy(
         "Test Token",
         "TT",
         ethers.utils.parseEther("100")
       );
       await myToken.deployed();
-      myTokenAddress = await myToken.address;
+      const myTokenAddress = await myToken.address;
 
       await myToken.transfer(
         multiSigWalletAddress,
         ethers.utils.parseEther("100")
       );
-    });
 
-    it("Should transfer token to the receiver", async () => {
-      let contractBalance = await myToken.balanceOf(multiSigWalletAddress);
-      let receiverBalance = await myToken.balanceOf(account1Address);
-
-      expect(contractBalance).to.equal(ethers.utils.parseEther("100"));
-      expect(receiverBalance).to.equal(0);
-
-      let ABI = ["function transfer(address to, uint256 amount)"];
-      let iface = new ethers.utils.Interface(ABI);
+      const ABI = ["function transfer(address to, uint256 amount)"];
+      const iface = new ethers.utils.Interface(ABI);
       const data = iface.encodeFunctionData("transfer", [
         account1Address,
         ethers.utils.parseEther("100"),
       ]);
 
-      // const data = await testERC20.getData(
-      //   account1Address,
-      //   ethers.utils.parseEther("100")
-      // );
+      let contractBalance = await myToken.balanceOf(multiSigWalletAddress);
+      expect(contractBalance).to.equal(ethers.utils.parseEther("100"));
+
+      let receiverBalance = await myToken.balanceOf(account1Address);
+      expect(receiverBalance).to.equal(0);
 
       await multiSigWallet
         .connect(owner1)
-        .submitTransaction(myTokenAddress, 0, data, 300);
+        .submitTransactionProposal(myTokenAddress, 0, data, 300);
 
-      let transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(0);
-      expect(transaction["executed"]).to.false;
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
 
-      let status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.true;
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
 
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(1);
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
 
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(2);
-
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(3);
-
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(4);
-      expect(transaction["executed"]).to.true;
+      await multiSigWallet.connect(owner4).supportTransactionProposal(0);
 
       contractBalance = await myToken.balanceOf(multiSigWalletAddress);
       receiverBalance = await myToken.balanceOf(account1Address);
@@ -551,80 +455,45 @@ describe("MultiSigWallet.sol", () => {
       expect(contractBalance).to.equal(0);
       expect(receiverBalance).to.equal(ethers.utils.parseEther("100"));
     });
-  });
 
-  describe("Signing of minting of an ERC721 token", () => {
-    let LazyMintNFT, lazyMintNFT, lazyMintNFTAddress;
-    beforeEach(async () => {
-      LazyMintNFT = await ethers.getContractFactory("LazyMintNFT");
-      lazyMintNFT = await LazyMintNFT.deploy("Lazy Mint", "LMINT");
+    it("Should be able to lazy mint an ERC721 token", async () => {
+      const LazyMintNFT = await ethers.getContractFactory("LazyMintNFT");
+      const lazyMintNFT = await LazyMintNFT.deploy("Lazy Mint", "LMINT");
       await lazyMintNFT.deployed();
-      lazyMintNFTAddress = await lazyMintNFT.address;
-    });
+      const lazyMintNFTAddress = await lazyMintNFT.address;
 
-    it("Should be able to sign minting of NFT", async () => {
+      const ABI = ["function lazyMint(address _to)"];
+      const iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("lazyMint", [account1Address]);
+
       let nftBalance = await lazyMintNFT.balanceOf(account1Address);
       expect(nftBalance).to.equal(0);
 
-      let ABI = ["function lazyMint(address _to)"];
-      let iface = new ethers.utils.Interface(ABI);
-      const data = iface.encodeFunctionData("lazyMint", [account1Address]);
-
-      // const data = await lazyMintNFT.getLazyMintData(account1Address);
-
       await multiSigWallet
         .connect(owner1)
-        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
+        .submitTransactionProposal(lazyMintNFTAddress, 0, data, 300);
 
-      let transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(0);
-      expect(transaction["executed"]).to.false;
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
 
-      let status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.true;
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
 
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(1);
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
 
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(2);
-
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(3);
-
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(4);
-      expect(transaction["executed"]).to.true;
+      await multiSigWallet.connect(owner4).supportTransactionProposal(0);
 
       nftBalance = await lazyMintNFT.balanceOf(account1Address);
-      const nftOwner = await lazyMintNFT.ownerOf(0);
-
       expect(nftBalance).to.equal(1);
+
+      const nftOwner = await lazyMintNFT.ownerOf(0);
       expect(nftOwner).to.equal(account1Address);
     });
 
-    it("Should be able to sign burning of NFT", async () => {
+    it("Should be able to burn an ERC721 token", async () => {
+      const LazyMintNFT = await ethers.getContractFactory("LazyMintNFT");
+      const lazyMintNFT = await LazyMintNFT.deploy("Lazy Mint", "LMINT");
+      await lazyMintNFT.deployed();
+      const lazyMintNFTAddress = await lazyMintNFT.address;
+
       let nftBalance = await lazyMintNFT.balanceOf(account1Address);
       expect(nftBalance).to.equal(0);
 
@@ -636,57 +505,23 @@ describe("MultiSigWallet.sol", () => {
       let nftOwner = await lazyMintNFT.ownerOf(0);
       expect(nftOwner).to.equal(account1Address);
 
-      let ABI = ["function burn(uint256 tokenId)"];
-      let iface = new ethers.utils.Interface(ABI);
+      const ABI = ["function burn(uint256 tokenId)"];
+      const iface = new ethers.utils.Interface(ABI);
       const data = iface.encodeFunctionData("burn", [0]);
-      // const data = await lazyMintNFT.getBurnData(0);
 
       await lazyMintNFT.connect(account1).approve(multiSigWalletAddress, 0);
 
       await multiSigWallet
         .connect(owner1)
-        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
+        .submitTransactionProposal(lazyMintNFTAddress, 0, data, 300);
 
-      let transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(0);
-      expect(transaction["executed"]).to.false;
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
 
-      let status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner1Address);
-      expect(status).to.true;
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
 
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(1);
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
 
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner2Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(2);
-
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner3Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(3);
-
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-      status = await multiSigWallet.approved(0, owner4Address);
-      expect(status).to.true;
-
-      transaction = await multiSigWallet.transactions(0);
-      expect(transaction["numberOfApprovals"]).to.equal(4);
-      expect(transaction["executed"]).to.true;
+      await multiSigWallet.connect(owner4).supportTransactionProposal(0);
 
       nftBalance = await lazyMintNFT.balanceOf(account1Address);
       expect(nftBalance).to.equal(0);
@@ -695,222 +530,200 @@ describe("MultiSigWallet.sol", () => {
         "ERC721: invalid token ID"
       );
     });
+  });
 
-    it("Should revert to sign minting of NFT, because minting is paused", async () => {
-      // const data = await lazyMintNFT.getLazyMintData(account1Address);
-      let ABI = ["function lazyMint(address _to)"];
-      let iface = new ethers.utils.Interface(ABI);
-      const data = iface.encodeFunctionData("lazyMint", [account1Address]);
-
-      await lazyMintNFT.pause();
-
+  describe("Opposing a transaction proposal", () => {
+    beforeEach(async () => {
       await multiSigWallet
         .connect(owner1)
-        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
+        .submitTransactionProposal(
+          owner2Address,
+          ethers.utils.parseEther("1"),
+          ethers.constants.HashZero,
+          300
+        );
+    });
 
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
+    it("Should be able to oppose a transaction proposal", async () => {
+      let transaction = await multiSigWallet.transactionProposals(0);
+      expect(transaction["numberOfApprovals"]).to.equal(0);
 
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
+      let status = await multiSigWallet.supportTransaction(0, owner1Address);
+      expect(status).to.false;
 
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
+
+      transaction = await multiSigWallet.transactionProposals(0);
+      expect(transaction["numberOfApprovals"]).to.equal(1);
+
+      status = await multiSigWallet.supportTransaction(0, owner1Address);
+      expect(status).to.true;
+
+      await multiSigWallet.connect(owner1).opposeTransactionProposal(0);
+
+      transaction = await multiSigWallet.transactionProposals(0);
+      expect(transaction["numberOfApprovals"]).to.equal(0);
+
+      status = await multiSigWallet.supportTransaction(0, owner1Address);
+      expect(status).to.false;
+    });
+
+    it("Should revert if we tries to oppose a transaction proposal from a non-owner account", async () => {
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
 
       await expect(
-        multiSigWallet.connect(owner4).confirmTransaction(0)
-      ).to.be.revertedWith("Tx failed");
+        multiSigWallet.connect(account1).opposeTransactionProposal(0)
+      ).to.be.revertedWith("Not owner");
     });
 
-    it("Should be able to sign minting of NFT, because minting is unpaused", async () => {
-      let nftBalance = await lazyMintNFT.balanceOf(account1Address);
-      expect(nftBalance).to.equal(0);
-
-      // const data = await lazyMintNFT.getLazyMintData(account1Address);
-      let ABI = ["function lazyMint(address _to)"];
-      let iface = new ethers.utils.Interface(ABI);
-      const data = iface.encodeFunctionData("lazyMint", [account1Address]);
-
-      await lazyMintNFT.pause();
-
-      await multiSigWallet
-        .connect(owner1)
-        .submitTransaction(lazyMintNFTAddress, 0, data, 300);
-
-      await multiSigWallet.connect(owner1).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner2).confirmTransaction(0);
-
-      await multiSigWallet.connect(owner3).confirmTransaction(0);
-
-      await lazyMintNFT.unpause();
-
-      await multiSigWallet.connect(owner4).confirmTransaction(0);
-
-      nftBalance = await lazyMintNFT.balanceOf(account1Address);
-      const nftOwner = await lazyMintNFT.ownerOf(0);
-
-      expect(nftBalance).to.equal(1);
-      expect(nftOwner).to.equal(account1Address);
+    it("Should revert if we tries to oppose a transaction proposal which does not exists", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).opposeTransactionProposal(1)
+      ).to.be.revertedWith("Transaction does not exists");
     });
 
-    it("Should revert if any account tries to pause minting other than owner", async () => {
-      await expect(lazyMintNFT.connect(account1).pause()).to.be.revertedWith(
-        "Ownable: caller is not the owner"
-      );
+    it("Should revert if we tries to oppose a transaction proposal which is already executed", async () => {
+      const tx = await owner1.sendTransaction({
+        to: multiSigWalletAddress,
+        value: ethers.utils.parseEther("1"),
+      });
+
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
+      await multiSigWallet.connect(owner2).supportTransactionProposal(0);
+      await multiSigWallet.connect(owner3).supportTransactionProposal(0);
+      await multiSigWallet.connect(owner4).supportTransactionProposal(0);
+
+      await expect(
+        multiSigWallet.connect(owner1).opposeTransactionProposal(0)
+      ).to.be.revertedWith("Transaction already executed");
     });
 
-    it("Should revert if any account tries to unpause minting other than owner", async () => {
-      await lazyMintNFT.pause();
+    it("Should revert if we tries to oppose a transaction proposal due to time expired", async () => {
+      await multiSigWallet.connect(owner1).supportTransactionProposal(0);
 
-      await expect(lazyMintNFT.connect(account1).unpause()).to.be.revertedWith(
-        "Ownable: caller is not the owner"
-      );
+      await network.provider.send("evm_increaseTime", [300]);
+      await network.provider.send("evm_mine");
+
+      await expect(
+        multiSigWallet.connect(owner1).opposeTransactionProposal(0)
+      ).to.be.revertedWith("Time up!");
+    });
+
+    it("Should revert if we tries to oppose a transaction proposal which is not supported before", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).opposeTransactionProposal(0)
+      ).to.be.revertedWith("Transaction not approved");
     });
   });
 
-  describe("Signing the inclusion of a new owner", () => {
+  describe("Adding an ownership candidate proposal", () => {
+    it("Should be able to add an ownership candidate", async () => {
+      let status = await multiSigWallet.isOwnershipCandidate(account1Address);
+      expect(status).is.false;
+      await multiSigWallet
+        .connect(owner1)
+        .addOwnerCandidate(account1Address, 300);
+
+      const blockBeforeNumber = await ethers.provider.getBlockNumber();
+      const blockBefore = await ethers.provider.getBlock(blockBeforeNumber);
+      const startTime = blockBefore.timestamp;
+      const endTime = startTime + 300;
+
+      const candidate = await multiSigWallet.candidateProposals(0);
+      expect(candidate["candidateAddress"]).to.equal(account1Address);
+      expect(candidate["numberOfApprovals"]).to.equal(0);
+      expect(candidate["startTime"]).to.equal(startTime);
+      expect(candidate["endTime"]).to.equal(endTime);
+      expect(candidate["selected"]).to.false;
+
+      status = await multiSigWallet.isOwnershipCandidate(account1Address);
+      expect(status).is.true;
+    });
+
+    it("Should revert to add an ownership candidate, because the function is called by a non-owner account", async () => {
+      await expect(
+        multiSigWallet.connect(account1).addOwnerCandidate(account1Address, 300)
+      ).to.be.revertedWith("Not owner");
+    });
+
+    it("Should revert to add an ownership candidate, because the given address is a zero address", async () => {
+      await expect(
+        multiSigWallet
+          .connect(owner1)
+          .addOwnerCandidate(ethers.constants.AddressZero, 300)
+      ).to.be.revertedWith("Zero address");
+    });
+
+    it("Should revert to add an ownership candidate, because the given address is already an owner", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).addOwnerCandidate(owner5Address, 300)
+      ).to.be.revertedWith("Already an owner");
+    });
+
+    it("Should revert to add an ownership candidate, because the given address is already an ownership candidate", async () => {
+      await multiSigWallet
+        .connect(owner1)
+        .addOwnerCandidate(account1Address, 300);
+
+      await expect(
+        multiSigWallet.connect(owner1).addOwnerCandidate(account1Address, 300)
+      ).to.be.revertedWith("Already a candidate for ownership");
+    });
+
+    it("Should revert to add an ownership candidate, due to 0 time duration", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).addOwnerCandidate(account1Address, 0)
+      ).to.be.revertedWith("Zero time duration");
+    });
+  });
+
+  describe("Voting for an ownership candidate", () => {
     beforeEach(async () => {
       await multiSigWallet
         .connect(owner1)
         .addOwnerCandidate(account1Address, 300);
     });
 
-    it("Should fail, if the inclusion request is done by an account which is not an owner", async () => {
-      await expect(
-        multiSigWallet.connect(account1).addOwnerCandidate(account2Address, 300)
-      ).to.be.revertedWith("Not owner");
-    });
-
-    it("Should fail, if the inclusion request is for an address which is already a candidate", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).addOwnerCandidate(account1Address, 300)
-      ).to.be.revertedWith("Already a candidate for ownership");
-    });
-
-    it("Should fail, if request is for including an account which is already an owner", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).addOwnerCandidate(owner2Address, 300)
-      ).to.be.revertedWith("Already an owner");
-    });
-
-    it("Should fail, if request is having zero time duration", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).addOwnerCandidate(account2Address, 0)
-      ).to.be.revertedWith("Zero time duration");
-    });
-
-    it("Should include the new account into the owner's list", async () => {
-      let ownershipStatus = await multiSigWallet.isOwner(account1Address);
-      expect(ownershipStatus).to.false;
-      let candidateshipStatus = await multiSigWallet.isOwnershipCandidate(
-        account1Address
-      );
-      expect(candidateshipStatus).to.true;
-
-      let candidate = await multiSigWallet.candidates(0);
-      expect(candidate["numberOfApprovals"]).to.equal(0);
-      expect(candidate["selected"]).to.false;
-
+    it("Should be able to vote for the candidate successfully", async () => {
       let status = await multiSigWallet.supportCandidate(0, owner1Address);
       expect(status).to.false;
+
+      let candidate = await multiSigWallet.candidateProposals(0);
+      expect(candidate["numberOfApprovals"]).to.equal(0);
+
       await multiSigWallet.connect(owner1).voteCandidate(0);
+
       status = await multiSigWallet.supportCandidate(0, owner1Address);
       expect(status).to.true;
 
-      candidate = await multiSigWallet.candidates(0);
+      candidate = await multiSigWallet.candidateProposals(0);
       expect(candidate["numberOfApprovals"]).to.equal(1);
-
-      status = await multiSigWallet.supportCandidate(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).voteCandidate(0);
-      status = await multiSigWallet.supportCandidate(0, owner2Address);
-      expect(status).to.true;
-
-      candidate = await multiSigWallet.candidates(0);
-      expect(candidate["numberOfApprovals"]).to.equal(2);
-
-      status = await multiSigWallet.supportCandidate(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).voteCandidate(0);
-      status = await multiSigWallet.supportCandidate(0, owner3Address);
-      expect(status).to.true;
-
-      candidate = await multiSigWallet.candidates(0);
-      expect(candidate["numberOfApprovals"]).to.equal(3);
-
-      status = await multiSigWallet.supportCandidate(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).voteCandidate(0);
-      status = await multiSigWallet.supportCandidate(0, owner4Address);
-      expect(status).to.true;
-
-      candidate = await multiSigWallet.candidates(0);
-      expect(candidate["numberOfApprovals"]).to.equal(4);
-      expect(candidate["selected"]).to.true;
-
-      const address = await multiSigWallet.owners(6);
-      expect(address).to.equal(account1Address);
-
-      ownershipStatus = await multiSigWallet.isOwner(account1Address);
-      expect(ownershipStatus).to.true;
-      candidateshipStatus = await multiSigWallet.isOwnershipCandidate(
-        account1Address
-      );
-      expect(candidateshipStatus).to.false;
     });
 
-    it("Should increase required votes while including the new account into the owner's list", async () => {
-      let reqVotes = await multiSigWallet.required();
-      expect(reqVotes).to.equal(4);
-
-      await multiSigWallet.connect(owner1).voteCandidate(0);
-
-      await multiSigWallet.connect(owner2).voteCandidate(0);
-
-      await multiSigWallet.connect(owner3).voteCandidate(0);
-
-      await multiSigWallet.connect(owner4).voteCandidate(0);
-
-      await multiSigWallet
-        .connect(owner1)
-        .addOwnerCandidate(account2Address, 300);
-
-      await multiSigWallet.connect(owner1).voteCandidate(1);
-
-      await multiSigWallet.connect(owner2).voteCandidate(1);
-
-      await multiSigWallet.connect(owner3).voteCandidate(1);
-
-      await multiSigWallet.connect(owner4).voteCandidate(1);
-
-      reqVotes = await multiSigWallet.required();
-      expect(reqVotes).to.equal(5);
-    });
-
-    it("Should fail to supporting a candidate, if it is done by an account which is not an owner", async () => {
+    it("Should revert if tried to vote for a candidate from a non-owner account", async () => {
       await expect(
-        multiSigWallet.connect(account2).voteCandidate(0)
+        multiSigWallet.connect(account1).voteCandidate(0)
       ).to.be.revertedWith("Not owner");
     });
 
-    it("Should fail to supporting a candidate, which does not exists", async () => {
+    it("Should revert if tried to vote for a candidate proposal which does not exists", async () => {
       await expect(
         multiSigWallet.connect(owner1).voteCandidate(1)
       ).to.be.revertedWith("Candidate does not exists");
     });
 
-    it("Should fail to supporting a candidate, which that account already supported", async () => {
+    it("Should revert if tried to vote for a candidate which is already supported", async () => {
       await multiSigWallet.connect(owner1).voteCandidate(0);
+
       await expect(
         multiSigWallet.connect(owner1).voteCandidate(0)
-      ).to.be.revertedWith("Candidate already approved");
+      ).to.be.revertedWith("Candidate already supported");
     });
 
-    it("Should fail to supporting a candidate, which is already made as an owner", async () => {
+    it("Should revert if tried to vote for a candidate which is already got elected", async () => {
       await multiSigWallet.connect(owner1).voteCandidate(0);
-
       await multiSigWallet.connect(owner2).voteCandidate(0);
-
       await multiSigWallet.connect(owner3).voteCandidate(0);
-
       await multiSigWallet.connect(owner4).voteCandidate(0);
 
       await expect(
@@ -918,501 +731,497 @@ describe("MultiSigWallet.sol", () => {
       ).to.be.revertedWith("Candidate already elected");
     });
 
-    it("Should fail voting for a new owner candidate due to time up", async () => {
-      await multiSigWallet.connect(owner1).voteCandidate(0);
-
-      await multiSigWallet.connect(owner2).voteCandidate(0);
-
-      await multiSigWallet.connect(owner3).voteCandidate(0);
-
+    it("Should revert if tried to vote for a candidate proposal, because time expired", async () => {
       await network.provider.send("evm_increaseTime", [300]);
       await network.provider.send("evm_mine");
 
       await expect(
-        multiSigWallet.connect(owner4).voteCandidate(0)
+        multiSigWallet.connect(owner1).voteCandidate(0)
       ).to.be.revertedWith("Time up!");
     });
 
-    it("Should revoke support for a new owner candidate", async () => {
-      let candidate = await multiSigWallet.candidates(0);
-      expect(candidate["numberOfApprovals"]).to.equal(0);
+    it("Should change the required votes if enough number of owners are elected", async () => {
+      let requiredVotes = await multiSigWallet.requiredVotes();
+      expect(requiredVotes).to.equal(4);
 
+      await multiSigWallet.connect(owner1).voteCandidate(0);
+      await multiSigWallet.connect(owner2).voteCandidate(0);
+      await multiSigWallet.connect(owner3).voteCandidate(0);
+      await multiSigWallet.connect(owner4).voteCandidate(0);
+
+      await multiSigWallet
+        .connect(owner1)
+        .addOwnerCandidate(account2Address, 300);
+
+      await multiSigWallet.connect(owner1).voteCandidate(1);
+      await multiSigWallet.connect(owner2).voteCandidate(1);
+      await multiSigWallet.connect(owner3).voteCandidate(1);
+      await multiSigWallet.connect(owner4).voteCandidate(1);
+
+      requiredVotes = await multiSigWallet.requiredVotes();
+      expect(requiredVotes).to.equal(5);
+    });
+  });
+
+  describe("Rejecting an ownership candidate", () => {
+    beforeEach(async () => {
+      await multiSigWallet
+        .connect(owner1)
+        .addOwnerCandidate(account1Address, 300);
+    });
+
+    it("Should be able to reject an ownership candidate successfully", async () => {
       let status = await multiSigWallet.supportCandidate(0, owner1Address);
       expect(status).to.false;
+
+      let candidate = await multiSigWallet.candidateProposals(0);
+      expect(candidate["numberOfApprovals"]).to.equal(0);
+
       await multiSigWallet.connect(owner1).voteCandidate(0);
+
       status = await multiSigWallet.supportCandidate(0, owner1Address);
       expect(status).to.true;
 
-      candidate = await multiSigWallet.candidates(0);
+      candidate = await multiSigWallet.candidateProposals(0);
       expect(candidate["numberOfApprovals"]).to.equal(1);
 
-      await multiSigWallet.connect(owner1).revokeVote(0);
+      await multiSigWallet.connect(owner1).rejectCandidate(0);
 
       status = await multiSigWallet.supportCandidate(0, owner1Address);
       expect(status).to.false;
 
-      candidate = await multiSigWallet.candidates(0);
+      candidate = await multiSigWallet.candidateProposals(0);
       expect(candidate["numberOfApprovals"]).to.equal(0);
     });
 
-    it("Should fail to revoke support for a candidate, if it is done by an account which is not an owner", async () => {
+    it("Should revert if tried to execute this function from a non-owner account", async () => {
       await expect(
-        multiSigWallet.connect(account2).revokeVote(0)
+        multiSigWallet.connect(account1).rejectCandidate(0)
       ).to.be.revertedWith("Not owner");
     });
 
-    it("Should fail to revert support for a candidate, which does not exists", async () => {
+    it("Should revert if tried to to reject an ownership candidate which does not exists", async () => {
+      await multiSigWallet.connect(owner1).voteCandidate(0);
       await expect(
-        multiSigWallet.connect(owner1).revokeVote(1)
+        multiSigWallet.connect(owner1).rejectCandidate(1)
       ).to.be.revertedWith("Candidate does not exists");
     });
 
-    it("Should fail to revert support for a candidate, which is already made as an owner", async () => {
+    it("Should revert if tried to to reject an ownership candidate which already got elected", async () => {
       await multiSigWallet.connect(owner1).voteCandidate(0);
-
       await multiSigWallet.connect(owner2).voteCandidate(0);
-
       await multiSigWallet.connect(owner3).voteCandidate(0);
-
       await multiSigWallet.connect(owner4).voteCandidate(0);
-
       await expect(
-        multiSigWallet.connect(owner4).revokeVote(0)
+        multiSigWallet.connect(owner1).rejectCandidate(0)
       ).to.be.revertedWith("Candidate already elected");
     });
 
-    it("Should fail to revoke support method due to not supporing before", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).revokeVote(0)
-      ).to.be.revertedWith("Candidate not approved");
-    });
-
-    it("Should fail to revoke support method due to time up", async () => {
+    it("Should revert if tried to to reject an ownership candidate, due to time expired", async () => {
       await multiSigWallet.connect(owner1).voteCandidate(0);
 
       await network.provider.send("evm_increaseTime", [300]);
       await network.provider.send("evm_mine");
 
       await expect(
-        multiSigWallet.connect(owner1).revokeVote(0)
+        multiSigWallet.connect(owner1).rejectCandidate(0)
       ).to.be.revertedWith("Time up!");
+    });
+
+    it("Should revert if tried to to reject an ownership candidate, because we haven't supported them before", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).rejectCandidate(0)
+      ).to.be.revertedWith("Candidate not approved");
     });
   });
 
-  describe("Signing the removal of a current owner", () => {
-    beforeEach(async () => {
-      await multiSigWallet.connect(owner1).removeOwner(owner5Address, 300);
+  describe("Submitting an ownership removal proposal", () => {
+    it("Should be able to submit ownership removal proposal successfully", async () => {
+      let status = await multiSigWallet.isOwnershipRemovalCandidate(
+        owner5Address
+      );
+      expect(status).is.false;
+
+      await multiSigWallet
+        .connect(owner1)
+        .removeOwnerProposal(owner5Address, 300);
+
+      const blockBeforeNumber = await ethers.provider.getBlockNumber();
+      const blockBefore = await ethers.provider.getBlock(blockBeforeNumber);
+      const startTime = blockBefore.timestamp;
+      const endTime = startTime + 300;
+
+      const proposal = await multiSigWallet.removalProposals(0);
+      expect(proposal["ownerAddress"]).to.equal(owner5Address);
+      expect(proposal["numberOfApprovals"]).to.equal(0);
+      expect(proposal["startTime"]).to.equal(startTime);
+      expect(proposal["endTime"]).to.equal(endTime);
+      expect(proposal["removed"]).is.false;
+
+      status = await multiSigWallet.isOwnershipRemovalCandidate(owner5Address);
+      expect(status).is.true;
     });
 
-    it("Should fail to propse the removal of an owner, if the request is made by an account which is not the user", async () => {
+    it("Should revert, if tried to execute from a non-owner account", async () => {
       await expect(
-        multiSigWallet.connect(account1).removeOwner(owner5Address, 300)
+        multiSigWallet.connect(account1).removeOwnerProposal(owner5Address, 300)
       ).to.be.revertedWith("Not owner");
     });
 
-    it("Should fail to propse the removal of an owner, if that owner is already a candidate for removal", async () => {
+    it("Should revert, if tried to remove an account from owners list, which is not an owner", async () => {
       await expect(
-        multiSigWallet.connect(owner1).removeOwner(owner5Address, 300)
-      ).to.be.revertedWith("Already a candidate for ownership removal");
-    });
-
-    it("Should fail to propse the removal of an owner, if the given address is not an owner", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).removeOwner(account2Address, 300)
+        multiSigWallet.connect(owner1).removeOwnerProposal(account1Address, 300)
       ).to.be.revertedWith("Not an owner");
     });
 
-    it("Should fail to propse the removal of an owner, due to zero time duration", async () => {
+    it("Should revert, if tried to remove an account from owners list, which is already under removal proposal", async () => {
+      await multiSigWallet
+        .connect(owner1)
+        .removeOwnerProposal(owner5Address, 300);
+
       await expect(
-        multiSigWallet.connect(owner1).removeOwner(owner6Address, 0)
+        multiSigWallet.connect(owner1).removeOwnerProposal(owner5Address, 300)
+      ).to.be.revertedWith("Already a candidate for ownership removal");
+    });
+
+    it("Should revert, because of 0 time duration", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).removeOwnerProposal(owner5Address, 0)
       ).to.be.revertedWith("Zero time duration");
-    });
-
-    it("Should remove a current account from the owner's list", async () => {
-      let ownershipStatus = await multiSigWallet.isOwner(owner5Address);
-      expect(ownershipStatus).to.true;
-      let candidateshipStatus =
-        await multiSigWallet.isOwnershipRemovalCandidate(owner5Address);
-      expect(candidateshipStatus).to.true;
-
-      let proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(0);
-      expect(proposal["removed"]).to.false;
-
-      let status = await multiSigWallet.supportRemoval(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-      status = await multiSigWallet.supportRemoval(0, owner1Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(1);
-
-      status = await multiSigWallet.supportRemoval(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).voteRemovalProposal(0);
-      status = await multiSigWallet.supportRemoval(0, owner2Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(2);
-
-      status = await multiSigWallet.supportRemoval(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).voteRemovalProposal(0);
-      status = await multiSigWallet.supportRemoval(0, owner3Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(3);
-
-      status = await multiSigWallet.supportRemoval(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).voteRemovalProposal(0);
-      status = await multiSigWallet.supportRemoval(0, owner4Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(4);
-      expect(proposal["removed"]).to.true;
-
-      ownershipStatus = await multiSigWallet.isOwner(owner5Address);
-      expect(ownershipStatus).to.false;
-      candidateshipStatus = await multiSigWallet.isOwnershipRemovalCandidate(
-        owner5Address
-      );
-      expect(candidateshipStatus).to.false;
-    });
-
-    it("Should decrease required votes while accounts is removed from the owner's list", async () => {
-      let reqVotes = await multiSigWallet.required();
-      expect(reqVotes).to.equal(4);
-
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner2).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner3).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner4).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner1).removeOwner(owner6Address, 300);
-
-      await multiSigWallet.connect(owner1).voteRemovalProposal(1);
-
-      await multiSigWallet.connect(owner2).voteRemovalProposal(1);
-
-      await multiSigWallet.connect(owner3).voteRemovalProposal(1);
-
-      await multiSigWallet.connect(owner4).voteRemovalProposal(1);
-
-      reqVotes = await multiSigWallet.required();
-      expect(reqVotes).to.equal(3);
-    });
-
-    it("Should fail to support a removal proposal, if the request is made by an account which is not the user", async () => {
-      await expect(
-        multiSigWallet.connect(account1).voteRemovalProposal(0)
-      ).to.be.revertedWith("Not owner");
-    });
-
-    it("Should fail to support a removal proposal, which does not exists", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).voteRemovalProposal(1)
-      ).to.be.revertedWith("Removal proposal does not exists");
-    });
-
-    it("Should fail to support a removal proposal, which is already supported by that user", async () => {
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-
-      await expect(
-        multiSigWallet.connect(owner1).voteRemovalProposal(0)
-      ).to.be.revertedWith("Removal proposal already approved");
-    });
-
-    it("Should fail to support a removal proposal, for an owner whom was already removed", async () => {
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner2).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner3).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner4).voteRemovalProposal(0);
-
-      await expect(
-        multiSigWallet.connect(owner6).voteRemovalProposal(0)
-      ).to.be.revertedWith("Owner already removed");
-    });
-
-    it("Should fail voting for the removal of a current owner due to time up", async () => {
-      await network.provider.send("evm_increaseTime", [300]);
-      await network.provider.send("evm_mine");
-
-      await expect(
-        multiSigWallet.connect(owner4).voteRemovalProposal(0)
-      ).to.be.revertedWith("Time up!");
-    });
-
-    it("Should revoke support for the removal of an owner", async () => {
-      let proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(0);
-
-      let status = await multiSigWallet.supportRemoval(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-      status = await multiSigWallet.supportRemoval(0, owner1Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(1);
-
-      await multiSigWallet.connect(owner1).revokeRemovalSupport(0);
-
-      status = await multiSigWallet.supportRemoval(0, owner1Address);
-      expect(status).to.false;
-
-      proposal = await multiSigWallet.removalProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(0);
-    });
-
-    it("Should fail to revoke support for a removal proposal, if the request is made by an account which is not the user", async () => {
-      await expect(
-        multiSigWallet.connect(account1).revokeRemovalSupport(0)
-      ).to.be.revertedWith("Not owner");
-    });
-
-    it("Should fail to revoke support for a removal proposal, which does not exists", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).revokeRemovalSupport(1)
-      ).to.be.revertedWith("Removal proposal does not exists");
-    });
-
-    it("Should fail to revoke support for a removal proposal, for an owner whom was already removed", async () => {
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner2).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner3).voteRemovalProposal(0);
-
-      await multiSigWallet.connect(owner4).voteRemovalProposal(0);
-
-      await expect(
-        multiSigWallet.connect(owner4).revokeRemovalSupport(0)
-      ).to.be.revertedWith("Owner already removed");
-    });
-
-    it("Should fail to revoke support for removal due to not supporing before", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).revokeRemovalSupport(0)
-      ).to.be.revertedWith("Ownership removal not approved");
-    });
-
-    it("Should fail to revoke support for removal due to time up", async () => {
-      await multiSigWallet.connect(owner1).voteRemovalProposal(0);
-
-      await network.provider.send("evm_increaseTime", [300]);
-      await network.provider.send("evm_mine");
-
-      await expect(
-        multiSigWallet.connect(owner1).revokeRemovalSupport(0)
-      ).to.be.revertedWith("Time up!");
     });
   });
 
-  describe("Signing the changing of required votes", () => {
+  describe("Voting for a removal proposal", () => {
     beforeEach(async () => {
-      await multiSigWallet.connect(owner1).addNewRequiredVotes(5, 300);
+      await multiSigWallet
+        .connect(owner1)
+        .removeOwnerProposal(owner5Address, 300);
     });
 
-    it("Should fail, if the proposal for a new amount of required votes is made by an account which is not an owner", async () => {
+    it("Should be able to vote for a ownership removal proposal", async () => {
+      let proposal = await multiSigWallet.removalProposals(0);
+      expect(proposal["numberOfApprovals"]).to.equal(0);
+
+      let status = await multiSigWallet.supportRemoval(0, owner1Address);
+      expect(status).is.false;
+
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+
+      proposal = await multiSigWallet.removalProposals(0);
+      expect(proposal["numberOfApprovals"]).to.equal(1);
+
+      status = await multiSigWallet.supportRemoval(0, owner1Address);
+      expect(status).is.true;
+    });
+
+    it("Should revert, if a non-owner account tries to vote for a ownership removal proposal", async () => {
+      await expect(
+        multiSigWallet.connect(account1).supportRemovalProposal(0)
+      ).to.be.revertedWith("Not owner");
+    });
+
+    it("Should revert, if removal proposal doesn't exists", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).supportRemovalProposal(1)
+      ).to.be.revertedWith("Removal proposal does not exists");
+    });
+
+    it("Should revert, if voting for removal proposal more than once", async () => {
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+
+      await expect(
+        multiSigWallet.connect(owner1).supportRemovalProposal(0)
+      ).to.be.revertedWith("Removal proposal already approved");
+    });
+
+    it("Should revert, if a ownership removal proposal is already executed, and owenr is removed", async () => {
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner2).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner3).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner4).supportRemovalProposal(0);
+      await expect(
+        multiSigWallet.connect(owner6).supportRemovalProposal(0)
+      ).to.be.revertedWith("Owner already removed");
+    });
+
+    it("Should revert, due to time expired", async () => {
+      await network.provider.send("evm_increaseTime", [300]);
+      await network.provider.send("evm_mine");
+
+      await expect(
+        multiSigWallet.connect(owner1).supportRemovalProposal(0)
+      ).to.be.revertedWith("Time up!");
+    });
+
+    it("Should change required votes, if enough number of owners are removed", async () => {
+      let requiredVotes = await multiSigWallet.requiredVotes();
+      expect(requiredVotes).to.equal(4);
+
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner2).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner3).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner4).supportRemovalProposal(0);
+
+      await multiSigWallet
+        .connect(owner1)
+        .removeOwnerProposal(owner6Address, 300);
+
+      await multiSigWallet.connect(owner1).supportRemovalProposal(1);
+      await multiSigWallet.connect(owner2).supportRemovalProposal(1);
+      await multiSigWallet.connect(owner3).supportRemovalProposal(1);
+      await multiSigWallet.connect(owner4).supportRemovalProposal(1);
+
+      requiredVotes = await multiSigWallet.requiredVotes();
+      expect(requiredVotes).to.equal(3);
+    });
+  });
+
+  describe("Opposing an ownership removal proposal", () => {
+    beforeEach(async () => {
+      await multiSigWallet
+        .connect(owner1)
+        .removeOwnerProposal(owner5Address, 300);
+    });
+
+    it("Should be able to oppose an ownership removal proposal successfully", async () => {
+      let proposal = await multiSigWallet.removalProposals(0);
+      expect(proposal["numberOfApprovals"]).to.equal(0);
+
+      let status = await multiSigWallet.supportRemoval(0, owner1Address);
+      expect(status).is.false;
+
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+
+      proposal = await multiSigWallet.removalProposals(0);
+      expect(proposal["numberOfApprovals"]).to.equal(1);
+
+      status = await multiSigWallet.supportRemoval(0, owner1Address);
+      expect(status).is.true;
+
+      await multiSigWallet.connect(owner1).opposeRemovalProposal(0);
+
+      proposal = await multiSigWallet.removalProposals(0);
+      expect(proposal["numberOfApprovals"]).to.equal(0);
+
+      status = await multiSigWallet.supportRemoval(0, owner1Address);
+      expect(status).is.false;
+    });
+
+    it("Should revert, if tried to oppose an ownership removal proposal from a non-owner account", async () => {
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+
+      await expect(
+        multiSigWallet.connect(account1).opposeRemovalProposal(0)
+      ).to.be.revertedWith("Not owner");
+    });
+
+    it("Should revert, because ownership removal proposal doesn't exist", async () => {
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+
+      await expect(
+        multiSigWallet.connect(owner1).opposeRemovalProposal(1)
+      ).to.be.revertedWith("Removal proposal does not exists");
+    });
+
+    it("Should revert, because ownership removal proposal already executed, and owner is removed", async () => {
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner2).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner3).supportRemovalProposal(0);
+      await multiSigWallet.connect(owner4).supportRemovalProposal(0);
+
+      await expect(
+        multiSigWallet.connect(owner1).opposeRemovalProposal(0)
+      ).to.be.revertedWith("Owner already removed");
+    });
+
+    it("Should revert, because time expired", async () => {
+      await multiSigWallet.connect(owner1).supportRemovalProposal(0);
+
+      await network.provider.send("evm_increaseTime", [300]);
+      await network.provider.send("evm_mine");
+
+      await expect(
+        multiSigWallet.connect(owner1).opposeRemovalProposal(0)
+      ).to.be.revertedWith("Time up!");
+    });
+
+    it("Should revert, because ownership removal proposal have not supported before", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).opposeRemovalProposal(0)
+      ).to.be.revertedWith("Ownership removal not approved");
+    });
+  });
+
+  describe("Adding new required number of votes", () => {
+    it("Should be able to add new required number votes", async () => {
+      await multiSigWallet.connect(owner1).addNewRequiredVotes(5, 300);
+
+      const blockBeforeNumber = await ethers.provider.getBlockNumber();
+      const blockBefore = await ethers.provider.getBlock(blockBeforeNumber);
+      const startTime = blockBefore.timestamp;
+      const endTime = startTime + 300;
+
+      const proposal = await multiSigWallet.requiredVotesProposals(0);
+      expect(proposal["newRequiredVotes"]).to.equal(5);
+      expect(proposal["numberOfApprovals"]).to.equal(0);
+      expect(proposal["startTime"]).to.equal(startTime);
+      expect(proposal["endTime"]).to.equal(endTime);
+      expect(proposal["changed"]).is.false;
+    });
+
+    it("Should revert, if tried to execute the function from a non-owner account", async () => {
       await expect(
         multiSigWallet.connect(account1).addNewRequiredVotes(5, 300)
       ).to.be.revertedWith("Not owner");
     });
 
-    it("Should fail, if the proposed new amount of required votes is same as the current one", async () => {
+    it("Should revert, if newly proposed required votes is same as the current", async () => {
       await expect(
         multiSigWallet.connect(owner1).addNewRequiredVotes(4, 300)
       ).to.be.revertedWith("Already the same required votes");
     });
 
-    it("Should fail, if the proposed new amount of required votes is invalid amount", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).addNewRequiredVotes(3, 300)
-      ).to.be.revertedWith("Invalid number of required votes");
-
+    it("Should revert, if newly proposed required votes is invalid", async () => {
       await expect(
         multiSigWallet.connect(owner1).addNewRequiredVotes(6, 300)
       ).to.be.revertedWith("Invalid number of required votes");
     });
 
-    it("Should fail, due to zero time duration", async () => {
+    it("Should revert, if 0 time duration", async () => {
       await expect(
         multiSigWallet.connect(owner1).addNewRequiredVotes(5, 0)
       ).to.be.revertedWith("Zero time duration");
     });
+  });
 
-    it("Should change the required number of votes", async () => {
-      let reqVotes = await multiSigWallet.required();
-      expect(reqVotes).to.equal(4);
+  describe("Supporting the proposal for the newly required number of votes", () => {
+    beforeEach(async () => {
+      await multiSigWallet.connect(owner1).addNewRequiredVotes(5, 300);
+    });
 
+    it("Should be able to vote for the proposal for the newly required number of votes", async () => {
       let proposal = await multiSigWallet.requiredVotesProposals(0);
       expect(proposal["numberOfApprovals"]).to.equal(0);
-      expect(proposal["changed"]).to.false;
-
       let status = await multiSigWallet.supportRequiredVotes(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).approveNewRequiredVotes(0);
-      status = await multiSigWallet.supportRequiredVotes(0, owner1Address);
-      expect(status).to.true;
+      expect(status).is.false;
+
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
 
       proposal = await multiSigWallet.requiredVotesProposals(0);
       expect(proposal["numberOfApprovals"]).to.equal(1);
-
-      status = await multiSigWallet.supportRequiredVotes(0, owner2Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner2).approveNewRequiredVotes(0);
-      status = await multiSigWallet.supportRequiredVotes(0, owner2Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.requiredVotesProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(2);
-
-      status = await multiSigWallet.supportRequiredVotes(0, owner3Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner3).approveNewRequiredVotes(0);
-      status = await multiSigWallet.supportRequiredVotes(0, owner3Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.requiredVotesProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(3);
-
-      status = await multiSigWallet.supportRequiredVotes(0, owner4Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner4).approveNewRequiredVotes(0);
-      status = await multiSigWallet.supportRequiredVotes(0, owner4Address);
-      expect(status).to.true;
-
-      proposal = await multiSigWallet.requiredVotesProposals(0);
-      expect(proposal["numberOfApprovals"]).to.equal(4);
-      expect(proposal["changed"]).to.true;
-
-      reqVotes = await multiSigWallet.required();
-      expect(reqVotes).to.equal(5);
+      status = await multiSigWallet.supportRequiredVotes(0, owner1Address);
+      expect(status).is.true;
     });
 
-    it("Should fail, if the supporting account for a new required number of votes is not by an owner", async () => {
+    it("Should revert if tried to execute the function from a non-owner account", async () => {
       await expect(
-        multiSigWallet.connect(account1).approveNewRequiredVotes(0)
+        multiSigWallet.connect(account1).supportNewRequiredVotes(0)
       ).to.be.revertedWith("Not owner");
     });
 
-    it("Should fail, if the proposal for a new required number of votes does not exists", async () => {
+    it("Should revert if the proposal for the newly required number of votes doesn't exist", async () => {
       await expect(
-        multiSigWallet.connect(owner1).approveNewRequiredVotes(1)
+        multiSigWallet.connect(owner1).supportNewRequiredVotes(1)
       ).to.be.revertedWith("New required votes proposal does not exists");
     });
 
-    it("Should fail, if the proposal for a new required number of votes is already accepted by the user", async () => {
-      await multiSigWallet.connect(owner1).approveNewRequiredVotes(0);
+    it("Should revert if voted for the proposal for the newly required number of votes", async () => {
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
 
       await expect(
-        multiSigWallet.connect(owner1).approveNewRequiredVotes(0)
+        multiSigWallet.connect(owner1).supportNewRequiredVotes(0)
       ).to.be.revertedWith("New required votes proposal already approved");
     });
 
-    it("Should fail, if the proposal for a new required number of votes is already executed", async () => {
-      await multiSigWallet.connect(owner1).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner2).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner3).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner4).approveNewRequiredVotes(0);
+    it("Should revert if voted for the proposal for the newly required number of votes, which is already selected", async () => {
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
+      await multiSigWallet.connect(owner2).supportNewRequiredVotes(0);
+      await multiSigWallet.connect(owner3).supportNewRequiredVotes(0);
+      await multiSigWallet.connect(owner4).supportNewRequiredVotes(0);
 
       await expect(
-        multiSigWallet.connect(owner5).approveNewRequiredVotes(0)
+        multiSigWallet.connect(owner5).supportNewRequiredVotes(0)
       ).to.be.revertedWith("Required votes proposal already changed");
     });
 
-    it("Should fail voting change the required number of votes due to time up", async () => {
-      await multiSigWallet.connect(owner1).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner2).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner3).approveNewRequiredVotes(0);
-
+    it("Should revert, because time expired", async () => {
       await network.provider.send("evm_increaseTime", [300]);
       await network.provider.send("evm_mine");
 
       await expect(
-        multiSigWallet.connect(owner4).approveNewRequiredVotes(0)
+        multiSigWallet.connect(owner1).supportNewRequiredVotes(0)
       ).to.be.revertedWith("Time up!");
     });
+  });
 
-    it("Should revoke support for changing the required number of votes", async () => {
+  describe("Opposing the proposal for a new required number of votes", () => {
+    beforeEach(async () => {
+      await multiSigWallet.connect(owner1).addNewRequiredVotes(5, 300);
+    });
+
+    it("Should be able to oppose proposal for the new required number of votes", async () => {
       let proposal = await multiSigWallet.requiredVotesProposals(0);
       expect(proposal["numberOfApprovals"]).to.equal(0);
-
       let status = await multiSigWallet.supportRequiredVotes(0, owner1Address);
-      expect(status).to.false;
-      await multiSigWallet.connect(owner1).approveNewRequiredVotes(0);
-      status = await multiSigWallet.supportRequiredVotes(0, owner1Address);
-      expect(status).to.true;
+      expect(status).is.false;
+
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
 
       proposal = await multiSigWallet.requiredVotesProposals(0);
       expect(proposal["numberOfApprovals"]).to.equal(1);
-
-      await multiSigWallet.connect(owner1).revokeNewRequiredVotes(0);
-
       status = await multiSigWallet.supportRequiredVotes(0, owner1Address);
-      expect(status).to.false;
+      expect(status).is.true;
+
+      await multiSigWallet.connect(owner1).opposeNewRequiredVotes(0);
 
       proposal = await multiSigWallet.requiredVotesProposals(0);
       expect(proposal["numberOfApprovals"]).to.equal(0);
+      status = await multiSigWallet.supportRequiredVotes(0, owner1Address);
+      expect(status).is.false;
     });
 
-    it("Should fail, if revoking support for a new required number of votes made by an account is not by an owner", async () => {
+    it("Should revert, due to call from a non-owner account", async () => {
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
+
       await expect(
-        multiSigWallet.connect(account1).revokeNewRequiredVotes(0)
+        multiSigWallet.connect(account1).opposeNewRequiredVotes(0)
       ).to.be.revertedWith("Not owner");
     });
 
-    it("Should fail, if the proposal for a new required number of votes does not exists", async () => {
+    it("Should revert, because proposal for the new required number of votes doesn't exist", async () => {
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
+
       await expect(
-        multiSigWallet.connect(owner1).revokeNewRequiredVotes(1)
+        multiSigWallet.connect(owner1).opposeNewRequiredVotes(1)
       ).to.be.revertedWith("New required votes proposal does not exists");
     });
 
-    it("Should fail, if the proposal for a new required number of votes is already executed", async () => {
-      await multiSigWallet.connect(owner1).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner2).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner3).approveNewRequiredVotes(0);
-
-      await multiSigWallet.connect(owner4).approveNewRequiredVotes(0);
+    it("Should revert, because proposal for the new required number of votes is already executed", async () => {
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
+      await multiSigWallet.connect(owner2).supportNewRequiredVotes(0);
+      await multiSigWallet.connect(owner3).supportNewRequiredVotes(0);
+      await multiSigWallet.connect(owner4).supportNewRequiredVotes(0);
 
       await expect(
-        multiSigWallet.connect(owner4).revokeNewRequiredVotes(0)
+        multiSigWallet.connect(owner1).opposeNewRequiredVotes(0)
       ).to.be.revertedWith("Required votes proposal already changed");
     });
 
-    it("Should fail to revoke support for changing the required number of votes due to not supporing before", async () => {
-      await expect(
-        multiSigWallet.connect(owner1).revokeNewRequiredVotes(0)
-      ).to.be.revertedWith("New required votes proposal not approved");
-    });
-
-    it("Should fail to revoke support for changing the required number of votes due to time up", async () => {
-      await multiSigWallet.connect(owner1).approveNewRequiredVotes(0);
+    it("Should revert, due to time expired", async () => {
+      await multiSigWallet.connect(owner1).supportNewRequiredVotes(0);
 
       await network.provider.send("evm_increaseTime", [300]);
       await network.provider.send("evm_mine");
 
       await expect(
-        multiSigWallet.connect(owner1).revokeNewRequiredVotes(0)
+        multiSigWallet.connect(owner1).opposeNewRequiredVotes(0)
       ).to.be.revertedWith("Time up!");
+    });
+
+    it("Should revert, because proposal for the new required number of votes haven't supported previously", async () => {
+      await expect(
+        multiSigWallet.connect(owner1).opposeNewRequiredVotes(0)
+      ).to.be.revertedWith("New required votes proposal not approved");
     });
   });
 });
